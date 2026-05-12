@@ -1,0 +1,71 @@
+import glob
+import pandas as pd
+
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
+
+# 赤色設定
+red = PatternFill(
+    start_color="FF0000",
+    end_color="FF0000",
+    fill_type="solid"
+)
+
+# 入力データ読込
+df = pd.read_excel("data.xlsx")
+
+# DataFrame → dict変換
+data = dict(zip(df.iloc[:,0], df.iloc[:,1]))
+
+print("読込データ")
+print(data)
+
+# 対象Excel
+files = glob.glob("測定結果*.xlsx")
+
+# 全処理
+for file in files:
+
+    # 一時ファイル除外
+    if file.startswith("~$"):
+        continue
+
+    print("処理中:", file)
+
+    # Excel開く
+    wb = load_workbook(file)
+
+    ws = wb.active
+
+    # 測点とセル対応
+    mapping = {
+        "GE-1": "D10",
+        "GE-2": "D12",
+        "GE-3": "D14"
+    }
+
+    # 自動入力
+    for point, value in data.items():
+
+        # mappingに無い測点は飛ばす
+        if point not in mapping:
+            continue
+
+        cell = mapping[point]
+
+        # 値入力
+        ws[cell] = value
+
+        # NG判定
+        if abs(value) > 10:
+
+            ws[cell].fill = red
+
+    # 保存
+    new_name = "完成_" + file
+
+    wb.save(new_name)
+
+    print("保存:", new_name)
+
+print("全部完了")
