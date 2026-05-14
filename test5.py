@@ -6,19 +6,15 @@ from openpyxl import load_workbook
 
 print("OCR → デキスパートExcel 自動入力開始")
 
-# Tesseract
 pytesseract.pytesseract.tesseract_cmd = (
     r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 )
 
-# 画像
 image_folder = "images"
 
-# Excel
 input_file = "sample.xlsx"
 output_file = "完成_自動入力.xlsx"
 
-# OCR
 values = []
 
 for filename in os.listdir(image_folder):
@@ -29,6 +25,9 @@ for filename in os.listdir(image_folder):
 
         img = Image.open(image_file)
         img = img.convert("L")
+        debug_file = "確認_" + filename
+        img.save(debug_file)
+        print("確認画像保存:", debug_file)
 
         text = pytesseract.image_to_string(
             img,
@@ -52,10 +51,14 @@ for filename in os.listdir(image_folder):
                 v = str(float(v) / 1000)
 
             values.append(float(v))
+            num = float(v)
+
+if 1.3 <= num <= 1.5:
+    values.append(num)
 
 print("復元値")
 print(values)
-# Excel入力
+
 wb = load_workbook(input_file)
 ws = wb["測定結果表"]
 
