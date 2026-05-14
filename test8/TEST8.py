@@ -48,7 +48,7 @@ for filename in sorted(os.listdir(image_folder)):
             img,
             lang="eng",
             config=(
-                "--psm 11 "
+                "--psm 4 "
                 "-c tessedit_char_whitelist=0123456789."
             )
         )
@@ -82,11 +82,9 @@ for filename in sorted(os.listdir(image_folder)):
 
                 left, right = v.split(".")
 
-                # 1.4 → 1.400
                 if len(right) == 1:
                     right = right + "00"
 
-                # 1.41 → 1.410
                 elif len(right) == 2:
                     right = right + "0"
 
@@ -101,31 +99,37 @@ for filename in sorted(os.listdir(image_folder)):
         print(filename, "→", values)
 
         # =========================
-        # 写真名から測点・項目名取得
+        # ファイル名解析
         # =========================
 
         # 例:
-        # GE-001_幅.jpg
-        # GE-002_厚さ.jpg
+        # GE-001_幅.png
 
         name_only = os.path.splitext(filename)[0]
 
         parts = name_only.split("_")
 
-        # 測点名
-        if len(parts) >= 1:
-            point_name = parts[0]
-        else:
-            point_name = f"GE-{len(csv_data)+1}"
+        # 測点開始番号
+        start_point = parts[0]
 
-        # 測定項目名
+        # 測定項目
         if len(parts) >= 2:
             measurement_item = parts[1]
         else:
             measurement_item = "幅"
 
-        # CSV追加
-        for value in values:
+        # GE-001 → 001
+        start_num = int(start_point.replace("GE-", ""))
+
+        # =========================
+        # 連番CSV生成
+        # =========================
+
+        for i, value in enumerate(values):
+
+            point_no = start_num + i
+
+            point_name = f"GE-{point_no:03d}"
 
             csv_data.append([
                 point_name,
