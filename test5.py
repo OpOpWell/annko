@@ -18,6 +18,8 @@ output_file = "完成_自動入力.xlsx"
 
 # OCR
 img = Image.open(image_file)
+img = img.convert("L")
+# img = img.point(lambda x: 0 if x < 180 else 255)
 
 text = text = pytesseract.image_to_string(
     img,
