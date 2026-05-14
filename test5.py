@@ -11,8 +11,7 @@ pytesseract.pytesseract.tesseract_cmd = (
 )
 
 # 画像
-image_file = "number.png.jpg"
-
+image_file = "LLEFT NNMBER.png"
 # Excel
 input_file = "sample.xlsx"
 output_file = "完成_自動入力.xlsx"
@@ -20,23 +19,30 @@ output_file = "完成_自動入力.xlsx"
 # OCR
 img = Image.open(image_file)
 
-text = pytesseract.image_to_string(
+text = text = pytesseract.image_to_string(
     img,
     lang="eng",
-    config="--psm 6"
+    config="--psm 6 -c tessedit_char_whitelist=0123456789."
 )
 
 print("OCR結果")
 print(text)
 
 # 4桁数字だけ抽出 例: 1404
-nums = re.findall(r"\d{4}", text)
-
+raw_values = re.findall(r"[0-9]?\.[0-9]{2,3}|[0-9]{4}", text)
 print("抽出数値")
-print(nums)
+print(raw_values)
 
-# 1404 → 1.404
-values = [float(x) / 1000 for x in nums]
+values = []
+
+for v in raw_values:
+    if v.startswith("."):
+        v = "1" + v
+
+    elif "." not in v and len(v) == 4:
+        v = str(float(v) / 1000)
+
+    values.append(float(v))
 
 print("復元値")
 print(values)
