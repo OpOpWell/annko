@@ -3,9 +3,8 @@ import pytesseract
 import re
 import pandas as pd
 import os
-from openpyxl import load_workbook
 
-print("OCR → デキスパートExcel 自動入力開始")
+print("OCR → デキスパートCSV 自動作成開始")
 
 # Tesseractパス
 pytesseract.pytesseract.tesseract_cmd = (
@@ -15,15 +14,13 @@ pytesseract.pytesseract.tesseract_cmd = (
 # 画像フォルダ
 image_folder = "images"
 
-# Excel
-input_file = "sample.xlsx"
-output_file = "完成_自動入力.xlsx"
+# 出力CSV
+output_csv = "dekispart.csv"
 
-# 抽出値保存
-values = []
+csv_data = []
 
-# 画像処理
-for filename in os.listdir(image_folder):
+# ファイル名順に処理
+for filename in sorted(os.listdir(image_folder)):
 
     if filename.lower().endswith((".png", ".jpg", ".jpeg")):
 
@@ -37,7 +34,7 @@ for filename in os.listdir(image_folder):
         # グレースケール化
         img = img.convert("L")
 
-        # OCR確認画像保存
+        # 確認用画像保存
         debug_file = "確認_" + filename
         img.save(debug_file)
 
@@ -62,7 +59,7 @@ for filename in os.listdir(image_folder):
         print("抽出数値")
         print(raw_values)
 
-        image_values = []
+        values = []
 
         for v in raw_values:
 
@@ -74,85 +71,62 @@ for filename in os.listdir(image_folder):
             elif "." not in v and len(v) == 4:
                 v = str(float(v) / 1000)
 
-            # 小数桁補正
+            # 小数3桁補正
             if "." in v:
-
                 left, right = v.split(".")
 
-                # 1.41 → 1.410
-                if len(right) == 2:
-                    right = right + "0"
-
-                # 1.4 → 1.400
-                elif len(right) == 1:
+                if len(right) == 1:
                     right = right + "00"
+                elif len(right) == 2:
+                    right = right + "0"
 
                 v = left + "." + right
 
-            # 数値化
             num = float(v)
 
-            # 範囲フィルタ
+            # 1.3〜1.5だけ採用
             if 1.3 <= num <= 1.5:
-
                 values.append(num)
-                image_values.append(num)
 
-        print(filename, "→", image_values)
+        print(filename, "→", values)
 
-print("復元値")
-print(values)
+        # ファイル名からGE番号を作る
+        # 例: GE-1.png → GE-1
+        name_only = os.path.splitext(filename)[0]
 
-# =========================
-# Excel入力
-# =========================
+        # ファイル名にGEが入っていればそのまま使う
+        if name_only.upper().startswith("GE-"):
+            ge_name = name_only.upper()
+        else:
+            ge_name = None
 
-wb = load_workbook(input_file)
+        # CSVへ追加
+        for i, value in enumerate(values):
 
-ws = wb["測定結果表"]
+            if ge_name:
+                # GE-1.png なら GE-1
+                point_name = ge_name
+            else:
+                # ファイル名にGEがない場合は順番で作る
+                point_name = f"GE-{len(csv_data) + 1}"
 
-start_row = 10
-target_col = "C"
+            csv_data.append([
+                point_name,
+                f"{value:.3f}"
+            ])
 
-for i, value in enumerate(values):
-
-    row = start_row + i * 2
-
-    cell = ws[f"{target_col}{row}"]
-
-    cell.value = value
-
-    # 1.400 表示固定
-    cell.number_format = "0.000"
-
-    print(f"{target_col}{row} = {value}")
-
-# 保存
-wb.save(output_file)
-
-print("保存しました:", output_file)
-
-# =========================
-# CSV出力
-# =========================
-
-csv_data = []
-
-for i, value in enumerate(values):
-
-    csv_data.append([
-        f"GE-{i+1}",
-        f"{value:.3f}"
-    ])
-
+# CSV保存
 df = pd.DataFrame(csv_data)
 
 df.to_csv(
-    "dekispart.csv",
+    output_csv,
     index=False,
     header=False,
     encoding="cp932"
 )
 
-print("CSV保存完了: dekispart.csv")
+print("CSV保存完了:", output_csv)
 
+print("CSV内容")
+for row in csv_data:
+    print(row[0], row[1])
