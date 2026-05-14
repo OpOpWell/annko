@@ -62,3 +62,11 @@ for i, value in enumerate(values):
 wb.save(output_file)
 
 print("保存しました:", output_file)
+
+img = Image.open(image_file)
+
+# 白黒化
+img = img.convert("L")
+
+# 二値化
+img = img.point(lambda x: 0 if x < 180 else 255)
