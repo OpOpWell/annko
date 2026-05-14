@@ -1,0 +1,6 @@
+__pycache__/
+*.png
+*.jpg
+*.xlsx
+test.bmp/
+test2_files/
