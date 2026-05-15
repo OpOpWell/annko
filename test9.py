@@ -7,10 +7,14 @@ import json
 
 client = OpenAI()
 
-print("GPT OCR → デキスパートCSV 自動作成開始")
+print("GPT OCR → デキスパートCSV 田番別自動作成開始")
 
 image_folder = "images"
-csv_data = []
+output_folder = "output"
+
+os.makedirs(output_folder, exist_ok=True)
+
+csv_by_taban = {}
 
 image_files = sorted([
     f for f in os.listdir(image_folder)
@@ -23,7 +27,7 @@ for image_name in image_files:
 
     print(f"処理中: {image_path}")
 
-    # GE開始番号取得
+    # 例: GE-001_均平度_19.jpeg
     match = re.search(r"GE-(\d+)", image_name)
 
     if not match:
@@ -32,21 +36,21 @@ for image_name in image_files:
 
     start_num = int(match.group(1))
 
-    # 測定項目名取得
-    parts = image_name.split("_")
+    parts = os.path.splitext(image_name)[0].split("_")
 
     if len(parts) >= 2:
         measurement_item = parts[1]
     else:
         measurement_item = "測定"
 
-    measurement_item = os.path.splitext(measurement_item)[0]
+    if len(parts) >= 3:
+        taban = parts[2]
+    else:
+        taban = "未分類"
 
-    # 画像base64化
     with open(image_path, "rb") as f:
         base64_image = base64.b64encode(f.read()).decode("utf-8")
 
-    # GPT OCR
     response = client.responses.create(
         model="gpt-4.1-mini",
         input=[
@@ -67,6 +71,8 @@ for image_name in image_files:
 - JSONのみ返す
 - 説明不要
 - ```json のようなコードブロックは付けない
+- 推測しない
+- 読めない値は除外する
 
 返却形式:
 [
@@ -89,21 +95,10 @@ for image_name in image_files:
     print("GPT結果")
     print(result_text)
 
-    # JSON抽出
-    # ----------------------------
-    # JSON抽出
-    # ----------------------------
-
-    # ```json 除去
     result_text = result_text.replace("```json", "")
     result_text = result_text.replace("```", "")
 
-    # JSON配列だけ抽出
-    match_json = re.search(
-        r"\[.*\]",
-        result_text,
-        re.DOTALL
-    )
+    match_json = re.search(r"\[.*\]", result_text, re.DOTALL)
 
     if not match_json:
         print("JSONが見つかりません")
@@ -113,13 +108,14 @@ for image_name in image_files:
 
     try:
         values = json.loads(json_text)
-
     except Exception as e:
         print("JSON変換失敗")
         print(e)
         continue
 
-    # CSVデータ作成
+    if taban not in csv_by_taban:
+        csv_by_taban[taban] = []
+
     for item in values:
 
         try:
@@ -129,7 +125,7 @@ for image_name in image_files:
             point_no = start_num + no - 1
             point_name = f"GE-{point_no:03d}"
 
-            csv_data.append([
+            csv_by_taban[taban].append([
                 point_name,
                 measurement_item,
                 f"{value:.3f}"
@@ -140,15 +136,21 @@ for image_name in image_files:
             print(item)
             print(e)
 
-# CSV保存
-with open("dekispart.csv", "w", newline="", encoding="utf-8-sig") as f:
 
-    writer = csv.writer(f)
-    writer.writerows(csv_data)
+# 田番別CSV保存
+for taban, rows in csv_by_taban.items():
 
-print("CSV保存完了: dekispart.csv")
+    output_csv = os.path.join(output_folder, f"田番{taban}.csv")
 
-print("CSV内容")
+    with open(output_csv, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f)
 
-for row in csv_data:
-    print(*row)
+        writer.writerow(["測点名", "測定項目", "実測値"])
+        writer.writerows(rows)
+
+    print("CSV保存完了:", output_csv)
+
+    for row in rows:
+        print(*row)
+
+print("全部完了")
