@@ -14,10 +14,19 @@ output_folder = "output"
 
 os.makedirs(output_folder, exist_ok=True)
 
-# 田番ごとに保存
+# 田番ごとの測点数
+expected_counts = {
+    "19": 30,
+    "18": 12,
+    "17": 14,
+    "16": 12,
+    "15": 12,
+    "14": 11,
+    "13": 22,
+}
+
 csv_by_taban = {}
 
-# 画像一覧
 image_files = sorted([
     f for f in os.listdir(image_folder)
     if f.lower().endswith((".png", ".jpg", ".jpeg"))
@@ -29,44 +38,20 @@ for image_name in image_files:
 
     print(f"処理中: {image_path}")
 
-    # ----------------------------
-    # ファイル名解析
-    # 例:
-    # GE-001_均平度_19.jpeg
-    # ----------------------------
-
-    match = re.search(r"GE-(\d+)", image_name)
-
-    if not match:
-        print("GE番号なし:", image_name)
-        continue
-
-    start_num = int(match.group(1))
-
     parts = os.path.splitext(image_name)[0].split("_")
 
-    # 測定項目
     if len(parts) >= 2:
         measurement_item = parts[1]
     else:
         measurement_item = "測定"
 
-    # 田番
     if len(parts) >= 3:
         taban = parts[2]
     else:
         taban = "未分類"
 
-    # ----------------------------
-    # 画像Base64
-    # ----------------------------
-
     with open(image_path, "rb") as f:
         base64_image = base64.b64encode(f.read()).decode("utf-8")
-
-    # ----------------------------
-    # GPT OCR
-    # ----------------------------
 
     response = client.responses.create(
         model="gpt-4.1-mini",
@@ -74,7 +59,6 @@ for image_name in image_files:
             {
                 "role": "user",
                 "content": [
-
                     {
                         "type": "input_text",
                         "text": """
@@ -99,12 +83,10 @@ for image_name in image_files:
 ]
 """
                     },
-
                     {
                         "type": "input_image",
                         "image_url": f"data:image/jpeg;base64,{base64_image}"
                     }
-
                 ]
             }
         ]
@@ -114,10 +96,6 @@ for image_name in image_files:
 
     print("GPT結果")
     print(result_text)
-
-    # ----------------------------
-    # JSON抽出
-    # ----------------------------
 
     result_text = result_text.replace("```json", "")
     result_text = result_text.replace("```", "")
@@ -136,47 +114,34 @@ for image_name in image_files:
 
     try:
         values = json.loads(json_text)
-
     except Exception as e:
         print("JSON変換失敗")
         print(e)
         continue
 
-    # ----------------------------
-    # 田番ごと初期化
-    # ----------------------------
-
     if taban not in csv_by_taban:
         csv_by_taban[taban] = []
 
-    # ----------------------------
-    # 読み取り値辞書化
-    # ----------------------------
-
     value_dict = {}
 
-    max_no = 0
-
     for item in values:
-
         try:
-
             no = int(item["no"])
             value = float(item["value"])
-
             value_dict[no] = value
-
-            if no > max_no:
-                max_no = no
-
         except:
             pass
 
-    # ----------------------------
-    # No.1スタートで空欄補完
-    # ----------------------------
+    # 田番ごとの固定測点数を使う
+    total_count = expected_counts.get(taban)
 
-    for no in range(1, max_no + 1):
+    if total_count is None:
+        if value_dict:
+            total_count = max(value_dict.keys())
+        else:
+            total_count = 0
+
+    for no in range(1, total_count + 1):
 
         point_name = f"No.{no}"
 
@@ -191,10 +156,6 @@ for image_name in image_files:
             measurement_item,
             value_text
         ])
-
-# ----------------------------
-# CSV保存
-# ----------------------------
 
 for taban, rows in csv_by_taban.items():
 
@@ -212,7 +173,6 @@ for taban, rows in csv_by_taban.items():
 
         writer = csv.writer(f)
 
-        # ヘッダ
         writer.writerow([
             "測点",
             "工種",
