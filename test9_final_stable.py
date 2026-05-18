@@ -7,40 +7,37 @@ import json
 
 client = OpenAI()
 
-print("SSK写真 OCR → 田番別CSV 自動作成開始")
+print("GPT OCR → デキスパートCSV 田番別自動作成開始")
 
-image_folder = "SSK"
-output_folder = "ssk_output"
+image_folder = "images"
+output_folder = "output"
 
 os.makedirs(output_folder, exist_ok=True)
 
-# 田番ごとの測点数
 expected_counts = {
     "19": 30,
-    "18": 16,
+    "18": 17,
     "17": 14,
     "16": 12,
     "15": 12,
     "14": 11,
     "13": 22,
-    "12": 23,
 }
 
 csv_by_taban = {}
 meta_by_taban = {}
 log_lines = []
 
-
-def log(message):
-    print(message)
-    log_lines.append(str(message))
-
-
 image_files = sorted([
     f for f in os.listdir(image_folder)
     if f.lower().endswith((".png", ".jpg", ".jpeg"))
     and not f.startswith("crop_")
 ])
+
+
+def log(message):
+    print(message)
+    log_lines.append(str(message))
 
 
 def gpt_ocr(image_path, model_name):
@@ -58,17 +55,9 @@ def gpt_ocr(image_path, model_name):
                     {
                         "type": "input_text",
                         "text": """
-このSSK出来形測定写真から情報を読み取ってください。
-
-重要:
-- 田番は、上部の「田番」欄に印刷されている数字だけを読む
-- 大きく丸で書かれた手書き数字は田番として使わない
-- 表の測点番号 1,2,3... は田番として使わない
-- 測定項目は「均平度」
-- 工種は「整地工」
+この画像の出来形測定表から情報を読み取ってください。
 
 読む項目:
-- 田番
 - 面積
 - 測定基準
 - 規格値
@@ -79,6 +68,7 @@ def gpt_ocr(image_path, model_name):
 - 番号と手書き実測値
 
 条件:
+- 田番と測定項目は読まなくてよい
 - 番号と手書き実測値を対応させる
 - 空欄は無視
 - 実測値は1.300〜1.600程度
@@ -91,16 +81,13 @@ def gpt_ocr(image_path, model_name):
 
 返却形式:
 {
-  "taban": "19",
-  "work_type": "整地工",
-  "measurement_item": "均平度",
   "area": "9750㎡",
   "standard": "10a当たり3点以上",
   "spec_value": "±50mm",
   "target_value": "±40mm",
   "average": "1.410",
-  "xmax": "1.400",
-  "xmin": "1.421",
+  "xmax": "1.421",
+  "xmin": "1.400",
   "values": [
     {"no": 1, "value": 1.418},
     {"no": 2, "value": 1.400}
@@ -125,14 +112,20 @@ def gpt_ocr(image_path, model_name):
     result_text = result_text.replace("```json", "")
     result_text = result_text.replace("```", "")
 
-    match_json = re.search(r"\{.*\}", result_text, re.DOTALL)
+    match_json = re.search(
+        r"\{.*\}",
+        result_text,
+        re.DOTALL
+    )
 
     if not match_json:
         log("JSONが見つかりません")
         return {}
 
+    json_text = match_json.group()
+
     try:
-        return json.loads(match_json.group())
+        return json.loads(json_text)
     except Exception as e:
         log("JSON変換失敗")
         log(e)
@@ -145,36 +138,23 @@ for image_name in image_files:
 
     log(f"\n処理中: {image_path}")
 
+    # 田番・測定項目はファイル名から取得
+    parts = os.path.splitext(image_name)[0].split("_")
+
+    if len(parts) >= 2:
+        measurement_item = parts[1]
+    else:
+        measurement_item = "測定"
+
+    if len(parts) >= 3:
+        taban = parts[2]
+    else:
+        taban = "未分類"
+
     result = gpt_ocr(image_path, "gpt-4.1-mini")
-
-    taban = str(result.get("taban", "")).strip()
-    work_type = str(result.get("work_type", "整地工")).strip()
-    measurement_item = str(result.get("measurement_item", "均平度")).strip()
-
-    if work_type == "":
-        work_type = "整地工"
-
-    if measurement_item == "":
-        measurement_item = "均平度"
-
-    # 田番が変ならファイル名から探す
-    if taban not in expected_counts:
-        name_without_ext = os.path.splitext(image_name)[0]
-
-        found = ""
-        for key in expected_counts.keys():
-            if key in name_without_ext:
-                found = key
-                break
-
-        if found:
-            taban = found
-        else:
-            taban = "未分類"
 
     if taban not in meta_by_taban:
         meta_by_taban[taban] = {
-            "工種": work_type,
             "測定項目": measurement_item,
             "面積": result.get("area", ""),
             "測定基準": result.get("standard", ""),
@@ -245,7 +225,7 @@ for image_name in image_files:
 
         csv_by_taban[taban].append([
             point_name,
-            f"{work_type}田番{taban}",
+            f"整地工田番{taban}",
             measurement_item,
             value_text
         ])
@@ -319,7 +299,6 @@ with open(
 
     writer.writerow([
         "田番",
-        "工種",
         "測定項目",
         "面積",
         "測定基準",
@@ -333,7 +312,6 @@ with open(
     for taban, meta in meta_by_taban.items():
         writer.writerow([
             taban,
-            meta.get("工種", ""),
             meta.get("測定項目", ""),
             meta.get("面積", ""),
             meta.get("測定基準", ""),
@@ -349,14 +327,14 @@ log(f"\n測定情報CSV保存完了: {meta_csv}")
 log("\n全部完了")
 
 with open(
-    "ssk_ocr_log.txt",
+    "ocr_log.txt",
     "w",
     encoding="utf-8"
 ) as f:
 
     f.write("\n".join(log_lines))
 
-print("OCRログ保存完了: ssk_ocr_log.txt")
+print("OCRログ保存完了: ocr_log.txt")
 
 
 
