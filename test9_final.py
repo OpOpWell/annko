@@ -26,14 +26,21 @@ expected_counts = {
 }
 
 csv_by_taban = {}
+log_lines = []
 
 image_files = sorted([
     f for f in os.listdir(image_folder)
     if f.lower().endswith((".png", ".jpg", ".jpeg"))
 ])
 
+
+def log(message):
+    print(message)
+    log_lines.append(str(message))
+
+
 # -----------------------------
-# OCR関数
+# GPT OCR関数
 # -----------------------------
 def gpt_ocr(image_path, model_name):
 
@@ -82,8 +89,8 @@ def gpt_ocr(image_path, model_name):
 
     result_text = response.output_text.strip()
 
-    print(f"\nGPT結果 ({model_name})")
-    print(result_text)
+    log(f"\nGPT結果 ({model_name})")
+    log(result_text)
 
     result_text = result_text.replace("```json", "")
     result_text = result_text.replace("```", "")
@@ -95,6 +102,7 @@ def gpt_ocr(image_path, model_name):
     )
 
     if not match_json:
+        log("JSONが見つかりません")
         return []
 
     json_text = match_json.group()
@@ -102,7 +110,9 @@ def gpt_ocr(image_path, model_name):
     try:
         values = json.loads(json_text)
         return values
-    except:
+    except Exception as e:
+        log("JSON変換失敗")
+        log(e)
         return []
 
 
@@ -113,7 +123,7 @@ for image_name in image_files:
 
     image_path = os.path.join(image_folder, image_name)
 
-    print(f"\n処理中: {image_path}")
+    log(f"\n処理中: {image_path}")
 
     parts = os.path.splitext(image_name)[0].split("_")
 
@@ -127,9 +137,7 @@ for image_name in image_files:
     else:
         taban = "未分類"
 
-    # -----------------------------
-    # 1回目 mini OCR
-    # -----------------------------
+    # 1回目：miniで全体OCR
     values = gpt_ocr(
         image_path,
         "gpt-4.1-mini"
@@ -154,24 +162,20 @@ for image_name in image_files:
         else:
             total_count = 0
 
-    # -----------------------------
     # 未読No検出
-    # -----------------------------
     missing_no = []
 
     for no in range(1, total_count + 1):
         if no not in value_dict:
             missing_no.append(no)
 
-    # -----------------------------
-    # 未読があれば4.1再OCR
-    # -----------------------------
+    # 未読があれば4.1で再OCR
     if missing_no:
 
-        print("\n未読No検出")
-        print(missing_no)
+        log("\n未読No検出")
+        log(missing_no)
 
-        print("\n4.1で再OCR実施")
+        log("\n4.1で再OCR実施")
 
         retry_values = gpt_ocr(
             image_path,
@@ -183,16 +187,14 @@ for image_name in image_files:
                 no = int(item["no"])
                 value = float(item["value"])
 
-                # 未読のみ上書き
+                # 未読のみ追加
                 if no not in value_dict:
                     value_dict[no] = value
 
             except:
                 pass
 
-    # -----------------------------
     # CSV格納
-    # -----------------------------
     if taban not in csv_by_taban:
         csv_by_taban[taban] = []
 
@@ -235,16 +237,16 @@ for taban, rows in csv_by_taban.items():
 
     if missing_by_item:
 
-        print(f"\n未読あり: 田番{taban}")
+        log(f"\n未読あり: 田番{taban}")
 
         for item_name, missing_no in missing_by_item.items():
-            print(
-                f"{item_name} 未読No:",
-                ", ".join(missing_no)
+            log(
+                f"{item_name} 未読No: "
+                + ", ".join(missing_no)
             )
 
     else:
-        print(f"\n未読なし: 田番{taban}")
+        log(f"\n未読なし: 田番{taban}")
 
     output_csv = os.path.join(
         output_folder,
@@ -259,11 +261,34 @@ for taban, rows in csv_by_taban.items():
     ) as f:
 
         writer = csv.writer(f)
+
+        # ヘッダ追加
+        writer.writerow([
+            "測点",
+            "工種",
+            "測定項目",
+            "実測値"
+        ])
+
         writer.writerows(rows)
 
-    print("\nCSV保存完了:", output_csv)
+    log(f"\nCSV保存完了: {output_csv}")
 
     for row in rows:
-        print(*row)
+        log(" ".join(row))
 
-print("\n全部完了")
+
+log("\n全部完了")
+
+# -----------------------------
+# OCRログ保存
+# -----------------------------
+with open(
+    "ocr_log.txt",
+    "w",
+    encoding="utf-8"
+) as f:
+
+    f.write("\n".join(log_lines))
+
+print("OCRログ保存完了: ocr_log.txt")
