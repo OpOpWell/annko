@@ -1,0 +1,373 @@
+SSK写真 OCR → デキスパートCSV 自動作成開始
+画像枚数: 10枚
+
+処理中 (1/10): C:/Users/user/OneDrive/hhh\IMG_0039.jpeg
+
+GPT結果 (gpt-4.1-mini)
+```json
+{
+  "taban": "11",
+  "work_type": "整地工",
+  "measurement_item": "均平度",
+  "area": "8090㎡",
+  "standard": "10a当たり3点以上",
+  "spec_value": "±50mm",
+  "target_value": "±40mm",
+  "average": "1.420",
+  "xmax": "1.426",
+  "xmin": "1.413",
+  "values": [
+    {"no": 1, "value": 1.424},
+    {"no": 2, "value": 1.421},
+    {"no": 3, "value": 1.426},
+    {"no": 4, "value": 1.417},
+    {"no": 5, "value": 1.425},
+    {"no": 6, "value": 1.422},
+    {"no": 7, "value": 1.413},
+    {"no": 8, "value": 1.426},
+    {"no": 9, "value": 1.419},
+    {"no": 10, "value": 1.425},
+    {"no": 11, "value": 1.423},
+    {"no": 12, "value": 1.414},
+    {"no": 13, "value": 1.419},
+    {"no": 14, "value": 1.421},
+    {"no": 15, "value": 1.414},
+    {"no": 16, "value": 1.424},
+    {"no": 17, "value": 1.421},
+    {"no": 18, "value": 1.415},
+    {"no": 19, "value": 1.426},
+    {"no": 20, "value": 1.419},
+    {"no": 21, "value": 1.424},
+    {"no": 22, "value": 1.421},
+    {"no": 23, "value": 1.416},
+    {"no": 24, "value": 1.425},
+    {"no": 25, "value": 1.416},
+    {"no": 26, "value": 1.416}
+  ]
+}
+```
+
+処理中 (2/10): C:/Users/user/OneDrive/hhh\IMG_0041.jpeg
+
+GPT結果 (gpt-4.1-mini)
+{
+  "taban": "9",
+  "work_type": "整地工",
+  "measurement_item": "均平度",
+  "area": "3270㎡",
+  "standard": "10a当たり3点以上",
+  "spec_value": "±50mm",
+  "target_value": "±40mm",
+  "average": "1.452",
+  "xmax": "1.446",
+  "xmin": "1.465",
+  "values": [
+    {"no": 1, "value": 1.446},
+    {"no": 2, "value": 1.456},
+    {"no": 3, "value": 1.461},
+    {"no": 4, "value": 1.447},
+    {"no": 5, "value": 1.460},
+    {"no": 6, "value": 1.444},
+    {"no": 7, "value": 1.446},
+    {"no": 8, "value": 1.450},
+    {"no": 9, "value": 1.448},
+    {"no": 10, "value": 1.465}
+  ]
+}
+
+処理中 (3/10): C:/Users/user/OneDrive/hhh\IMG_0042.jpeg
+
+GPT結果 (gpt-4.1-mini)
+{
+  "taban": "10",
+  "work_type": "整地仕上げ均平度",
+  "measurement_item": "均平度",
+  "area": "3310㎡",
+  "standard": "10a当たり3点以上",
+  "spec_value": "±50mm",
+  "target_value": "±40mm",
+  "average": "1.467",
+  "xmax": "1.464",
+  "xmin": "1.474",
+  "values": [
+    {"no": 1, "value": 1.464},
+    {"no": 2, "value": 1.464},
+    {"no": 3, "value": 1.474},
+    {"no": 4, "value": 1.466},
+    {"no": 5, "value": 1.463},
+    {"no": 6, "value": 1.465},
+    {"no": 7, "value": 1.469},
+    {"no": 8, "value": 1.473},
+    {"no": 9, "value": 1.469},
+    {"no": 10, "value": 1.466},
+    {"no": 11, "value": 1.474}
+  ]
+}
+
+処理中 (4/10): C:/Users/user/OneDrive/hhh\IMG_0043.jpeg
+
+GPT結果 (gpt-4.1-mini)
+```json
+{
+  "taban": "8",
+  "work_type": "整地工",
+  "measurement_item": "均平度",
+  "area": "3030㎡",
+  "standard": "10a当たり3点以上",
+  "spec_value": "±50mm",
+  "target_value": "±40mm",
+  "average": "1.399",
+  "xmax": "1.409",
+  "xmin": "1.391",
+  "values": [
+    {"no": 1, "value": 1.409},
+    {"no": 2, "value": 1.396},
+    {"no": 3, "value": 1.391},
+    {"no": 4, "value": 1.406},
+    {"no": 5, "value": 1.395},
+    {"no": 6, "value": 1.399},
+    {"no": 7, "value": 1.399},
+    {"no": 8, "value": 1.397},
+    {"no": 9, "value": 1.393},
+    {"no": 10, "value": 1.407}
+  ]
+}
+```
+
+処理中 (5/10): C:/Users/user/OneDrive/hhh\IMG_0044.jpeg
+
+GPT結果 (gpt-4.1-mini)
+```json
+{
+  "taban": "7",
+  "work_type": "整地工",
+  "measurement_item": "均平度",
+  "area": "3200㎡",
+  "standard": "10a当たり3点以上",
+  "spec_value": "±50mm",
+  "target_value": "±40mm",
+  "average": "1.414",
+  "xmax": "1.400",
+  "xmin": "1.421",
+  "values": [
+    {"no": 1, "value": 1.418},
+    {"no": 2, "value": 1.400},
+    {"no": 3, "value": 1.408},
+    {"no": 4, "value": 1.420},
+    {"no": 5, "value": 1.415},
+    {"no": 6, "value": 1.420},
+    {"no": 7, "value": 1.418},
+    {"no": 8, "value": 1.419},
+    {"no": 9, "value": 1.421},
+    {"no": 10, "value": 1.409}
+  ]
+}
+```
+
+処理中 (6/10): C:/Users/user/OneDrive/hhh\IMG_0045.jpeg
+
+GPT結果 (gpt-4.1-mini)
+{
+  "taban": "6",
+  "work_type": "整地工",
+  "measurement_item": "均平度",
+  "area": "3220㎡",
+  "standard": "10a当たり3点以上",
+  "spec_value": "±50mm",
+  "target_value": "±40mm",
+  "average": "1.452",
+  "xmax": "1.444",
+  "xmin": "1.462",
+  "values": [
+    {"no": 1, "value": 1.449},
+    {"no": 2, "value": 1.460},
+    {"no": 3, "value": 1.445},
+    {"no": 4, "value": 1.444},
+    {"no": 5, "value": 1.455},
+    {"no": 6, "value": 1.451},
+    {"no": 7, "value": 1.460},
+    {"no": 8, "value": 1.448},
+    {"no": 9, "value": 1.462},
+    {"no": 10, "value": 1.450}
+  ]
+}
+
+処理中 (7/10): C:/Users/user/OneDrive/hhh\IMG_0047.jpeg
+
+GPT結果 (gpt-4.1-mini)
+```json
+{
+  "taban": "5",
+  "work_type": "整地工",
+  "measurement_item": "均平度",
+  "area": "3210㎡",
+  "standard": "10a当たり3点以上",
+  "spec_value": "±50mm",
+  "target_value": "±40mm",
+  "average": "1.375",
+  "xmax": "1.386",
+  "xmin": "1.366",
+  "values": [
+    {"no": 1, "value": 1.386},
+    {"no": 2, "value": 1.380},
+    {"no": 3, "value": 1.372},
+    {"no": 4, "value": 1.386},
+    {"no": 5, "value": 1.378},
+    {"no": 6, "value": 1.376},
+    {"no": 7, "value": 1.370},
+    {"no": 8, "value": 1.385},
+    {"no": 9, "value": 1.380}
+  ]
+}
+```
+
+処理中 (8/10): C:/Users/user/OneDrive/hhh\IMG_0048.jpeg
+
+GPT結果 (gpt-4.1-mini)
+{
+  "taban": "3",
+  "work_type": "整地工",
+  "measurement_item": "均平度",
+  "area": "4180㎡",
+  "standard": "10a当たり3点以上",
+  "spec_value": "±50mm",
+  "target_value": "±40mm",
+  "average": "1.461",
+  "xmax": "1.458",
+  "xmin": "1.476",
+  "values": [
+    {"no": 1, "value": 1.479},
+    {"no": 2, "value": 1.452},
+    {"no": 3, "value": 1.453},
+    {"no": 4, "value": 1.473},
+    {"no": 5, "value": 1.476},
+    {"no": 6, "value": 1.451},
+    {"no": 7, "value": 1.478},
+    {"no": 8, "value": 1.457},
+    {"no": 9, "value": 1.458},
+    {"no": 10, "value": 1.466},
+    {"no": 11, "value": 1.461},
+    {"no": 12, "value": 1.450}
+  ]
+}
+
+未読No検出
+[13, 14, 15, 16]
+
+4.1で再OCR実施
+
+GPT結果 (gpt-4.1)
+{
+  "taban": "3",
+  "work_type": "整地工",
+  "measurement_item": "均平度",
+  "area": "4180㎡",
+  "standard": "10a当たり3点以上",
+  "spec_value": "±50mm",
+  "target_value": "±40mm",
+  "average": "1.461",
+  "xmax": "1.458",
+  "xmin": "1.476",
+  "values": [
+    {"no": 1, "value": 1.479},
+    {"no": 2, "value": 1.452},
+    {"no": 3, "value": 1.453},
+    {"no": 4, "value": 1.456},
+    {"no": 5, "value": 1.451},
+    {"no": 6, "value": 1.473},
+    {"no": 7, "value": 1.459},
+    {"no": 8, "value": 1.478},
+    {"no": 9, "value": 1.459},
+    {"no": 10, "value": 1.458},
+    {"no": 11, "value": 1.486},
+    {"no": 12, "value": 1.450}
+  ]
+}
+
+処理中 (9/10): C:/Users/user/OneDrive/hhh\IMG_0049.jpeg
+
+GPT結果 (gpt-4.1-mini)
+```json
+{
+  "taban": "2",
+  "work_type": "整地工",
+  "measurement_item": "均平度",
+  "area": "1340㎡",
+  "standard": "10a当たり3点以上",
+  "spec_value": "±50mm",
+  "target_value": "±40mm",
+  "average": "1.401",
+  "xmax": "1.394",
+  "xmin": "1.409",
+  "values": [
+    {"no": 1, "value": 1.397},
+    {"no": 2, "value": 1.406},
+    {"no": 3, "value": 1.394},
+    {"no": 4, "value": 1.402},
+    {"no": 5, "value": 1.409}
+  ]
+}
+```
+
+処理中 (10/10): C:/Users/user/OneDrive/hhh\IMG_0050.jpeg
+
+GPT結果 (gpt-4.1-mini)
+```json
+{
+  "taban": "1",
+  "work_type": "整地工",
+  "measurement_item": "均平度",
+  "area": "3540㎡",
+  "standard": "10a当たり3点以上",
+  "spec_value": "±50mm",
+  "target_value": "±40mm",
+  "average": "1.428",
+  "xmax": "1.417",
+  "xmin": "1.434",
+  "values": [
+    {"no": 1, "value": 1.426},
+    {"no": 2, "value": 1.430},
+    {"no": 3, "value": 1.428},
+    {"no": 4, "value": 1.430},
+    {"no": 5, "value": 1.434},
+    {"no": 6, "value": 1.430},
+    {"no": 7, "value": 1.427},
+    {"no": 8, "value": 1.433},
+    {"no": 9, "value": 1.426},
+    {"no": 10, "value": 1.417},
+    {"no": 11, "value": 1.430},
+    {"no": 12, "value": 1.429}
+  ]
+}
+```
+
+未読なし: 田番11
+CSV保存完了: C:/Users/user/foolder/zzz\田番11.csv
+
+未読なし: 田番9
+CSV保存完了: C:/Users/user/foolder/zzz\田番9.csv
+
+未読なし: 田番10
+CSV保存完了: C:/Users/user/foolder/zzz\田番10.csv
+
+未読なし: 田番8
+CSV保存完了: C:/Users/user/foolder/zzz\田番8.csv
+
+未読なし: 田番7
+CSV保存完了: C:/Users/user/foolder/zzz\田番7.csv
+
+未読なし: 田番6
+CSV保存完了: C:/Users/user/foolder/zzz\田番6.csv
+
+未読なし: 田番5
+CSV保存完了: C:/Users/user/foolder/zzz\田番5.csv
+
+未読あり: 田番3
+未読No: No.13, No.14, No.15, No.16
+CSV保存完了: C:/Users/user/foolder/zzz\田番3.csv
+
+未読なし: 田番2
+CSV保存完了: C:/Users/user/foolder/zzz\田番2.csv
+
+未読なし: 田番1
+CSV保存完了: C:/Users/user/foolder/zzz\田番1.csv
