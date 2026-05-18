@@ -1,4 +1,5 @@
 from openai import OpenAI
+from PIL import Image
 import base64
 import os
 import csv
@@ -28,15 +29,49 @@ expected_counts = {
 csv_by_taban = {}
 log_lines = []
 
+# crop_画像は除外
 image_files = sorted([
     f for f in os.listdir(image_folder)
     if f.lower().endswith((".png", ".jpg", ".jpeg"))
+    and not f.startswith("crop_")
 ])
 
 
 def log(message):
     print(message)
     log_lines.append(str(message))
+
+
+# -----------------------------
+# 下1/3切り抜きOCR用
+# -----------------------------
+def crop_bottom_half(image_path):
+
+    img = Image.open(image_path)
+
+    width, height = img.size
+
+    crop_area = (
+        0,
+        height * 2 // 3,
+        width,
+        height
+    )
+
+    cropped = img.crop(crop_area)
+
+    base_name = os.path.basename(image_path)
+
+    crop_path = os.path.join(
+        image_folder,
+        "crop_" + base_name
+    )
+
+    cropped.save(crop_path)
+
+    log(f"切り抜き保存: {crop_path}")
+
+    return crop_path
 
 
 # -----------------------------
@@ -110,6 +145,7 @@ def gpt_ocr(image_path, model_name):
     try:
         values = json.loads(json_text)
         return values
+
     except Exception as e:
         log("JSON変換失敗")
         log(e)
@@ -121,7 +157,10 @@ def gpt_ocr(image_path, model_name):
 # -----------------------------
 for image_name in image_files:
 
-    image_path = os.path.join(image_folder, image_name)
+    image_path = os.path.join(
+        image_folder,
+        image_name
+    )
 
     log(f"\n処理中: {image_path}")
 
@@ -137,7 +176,9 @@ for image_name in image_files:
     else:
         taban = "未分類"
 
-    # 1回目：miniで全体OCR
+    # -----------------------------
+    # 1回目 mini OCR
+    # -----------------------------
     values = gpt_ocr(
         image_path,
         "gpt-4.1-mini"
@@ -146,43 +187,59 @@ for image_name in image_files:
     value_dict = {}
 
     for item in values:
+
         try:
             no = int(item["no"])
             value = float(item["value"])
+
             value_dict[no] = value
+
         except:
             pass
 
-    # 田番ごとの固定測点数
+    # -----------------------------
+    # 固定測点数
+    # -----------------------------
     total_count = expected_counts.get(taban)
 
     if total_count is None:
+
         if value_dict:
             total_count = max(value_dict.keys())
         else:
             total_count = 0
 
+    # -----------------------------
     # 未読No検出
+    # -----------------------------
     missing_no = []
 
     for no in range(1, total_count + 1):
+
         if no not in value_dict:
             missing_no.append(no)
 
-    # 未読があれば4.1で再OCR
+    # -----------------------------
+    # 未読あれば分割OCR
+    # -----------------------------
     if missing_no:
 
         log("\n未読No検出")
         log(missing_no)
 
-        log("\n4.1で再OCR実施")
+        log("\n画像切り抜きOCR開始")
+
+        crop_path = crop_bottom_half(
+            image_path
+        )
 
         retry_values = gpt_ocr(
-            image_path,
+            crop_path,
             "gpt-4.1"
         )
 
         for item in retry_values:
+
             try:
                 no = int(item["no"])
                 value = float(item["value"])
@@ -194,7 +251,9 @@ for image_name in image_files:
             except:
                 pass
 
+    # -----------------------------
     # CSV格納
+    # -----------------------------
     if taban not in csv_by_taban:
         csv_by_taban[taban] = []
 
@@ -240,6 +299,7 @@ for taban, rows in csv_by_taban.items():
         log(f"\n未読あり: 田番{taban}")
 
         for item_name, missing_no in missing_by_item.items():
+
             log(
                 f"{item_name} 未読No: "
                 + ", ".join(missing_no)
