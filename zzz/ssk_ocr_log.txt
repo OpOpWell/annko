@@ -1,7 +1,6 @@
 SSK写真 OCR → デキスパートCSV 自動作成開始
-画像枚数: 10枚
 
-処理中 (1/10): C:/Users/user/OneDrive/hhh\IMG_0039.jpeg
+処理中: hhh\IMG_0039.jpeg
 
 GPT結果 (gpt-4.1-mini)
 ```json
@@ -24,8 +23,8 @@ GPT結果 (gpt-4.1-mini)
     {"no": 5, "value": 1.425},
     {"no": 6, "value": 1.422},
     {"no": 7, "value": 1.413},
-    {"no": 8, "value": 1.426},
-    {"no": 9, "value": 1.419},
+    {"no": 8, "value": 1.424},
+    {"no": 9, "value": 1.421},
     {"no": 10, "value": 1.425},
     {"no": 11, "value": 1.423},
     {"no": 12, "value": 1.414},
@@ -47,9 +46,10 @@ GPT結果 (gpt-4.1-mini)
 }
 ```
 
-処理中 (2/10): C:/Users/user/OneDrive/hhh\IMG_0041.jpeg
+処理中: hhh\IMG_0041.jpeg
 
 GPT結果 (gpt-4.1-mini)
+```json
 {
   "taban": "9",
   "work_type": "整地工",
@@ -74,8 +74,9 @@ GPT結果 (gpt-4.1-mini)
     {"no": 10, "value": 1.465}
   ]
 }
+```
 
-処理中 (3/10): C:/Users/user/OneDrive/hhh\IMG_0042.jpeg
+処理中: hhh\IMG_0042.jpeg
 
 GPT結果 (gpt-4.1-mini)
 {
@@ -104,7 +105,7 @@ GPT結果 (gpt-4.1-mini)
   ]
 }
 
-処理中 (4/10): C:/Users/user/OneDrive/hhh\IMG_0043.jpeg
+処理中: hhh\IMG_0043.jpeg
 
 GPT結果 (gpt-4.1-mini)
 ```json
@@ -134,7 +135,7 @@ GPT結果 (gpt-4.1-mini)
 }
 ```
 
-処理中 (5/10): C:/Users/user/OneDrive/hhh\IMG_0044.jpeg
+処理中: hhh\IMG_0044.jpeg
 
 GPT結果 (gpt-4.1-mini)
 ```json
@@ -164,7 +165,7 @@ GPT結果 (gpt-4.1-mini)
 }
 ```
 
-処理中 (6/10): C:/Users/user/OneDrive/hhh\IMG_0045.jpeg
+処理中: hhh\IMG_0045.jpeg
 
 GPT結果 (gpt-4.1-mini)
 {
@@ -192,7 +193,7 @@ GPT結果 (gpt-4.1-mini)
   ]
 }
 
-処理中 (7/10): C:/Users/user/OneDrive/hhh\IMG_0047.jpeg
+処理中: hhh\IMG_0047.jpeg
 
 GPT結果 (gpt-4.1-mini)
 ```json
@@ -221,7 +222,7 @@ GPT結果 (gpt-4.1-mini)
 }
 ```
 
-処理中 (8/10): C:/Users/user/OneDrive/hhh\IMG_0048.jpeg
+処理中: hhh\IMG_0048.jpeg
 
 GPT結果 (gpt-4.1-mini)
 {
@@ -239,52 +240,24 @@ GPT結果 (gpt-4.1-mini)
     {"no": 1, "value": 1.479},
     {"no": 2, "value": 1.452},
     {"no": 3, "value": 1.453},
-    {"no": 4, "value": 1.473},
-    {"no": 5, "value": 1.476},
+    {"no": 4, "value": 1.476},
+    {"no": 5, "value": 1.451},
     {"no": 6, "value": 1.451},
     {"no": 7, "value": 1.478},
     {"no": 8, "value": 1.457},
     {"no": 9, "value": 1.458},
     {"no": 10, "value": 1.466},
     {"no": 11, "value": 1.461},
-    {"no": 12, "value": 1.450}
+    {"no": 12, "value": 1.450},
+    {"no": 13, "value": 1.470},
+    {"no": 14, "value": 1.455},
+    {"no": 15, "value": 1.473},
+    {"no": 16, "value": 1.451},
+    {"no": 17, "value": 1.459}
   ]
 }
 
-未読No検出
-[13, 14, 15, 16]
-
-4.1で再OCR実施
-
-GPT結果 (gpt-4.1)
-{
-  "taban": "3",
-  "work_type": "整地工",
-  "measurement_item": "均平度",
-  "area": "4180㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
-  "average": "1.461",
-  "xmax": "1.458",
-  "xmin": "1.476",
-  "values": [
-    {"no": 1, "value": 1.479},
-    {"no": 2, "value": 1.452},
-    {"no": 3, "value": 1.453},
-    {"no": 4, "value": 1.456},
-    {"no": 5, "value": 1.451},
-    {"no": 6, "value": 1.473},
-    {"no": 7, "value": 1.459},
-    {"no": 8, "value": 1.478},
-    {"no": 9, "value": 1.459},
-    {"no": 10, "value": 1.458},
-    {"no": 11, "value": 1.486},
-    {"no": 12, "value": 1.450}
-  ]
-}
-
-処理中 (9/10): C:/Users/user/OneDrive/hhh\IMG_0049.jpeg
+処理中: hhh\IMG_0049.jpeg
 
 GPT結果 (gpt-4.1-mini)
 ```json
@@ -309,7 +282,7 @@ GPT結果 (gpt-4.1-mini)
 }
 ```
 
-処理中 (10/10): C:/Users/user/OneDrive/hhh\IMG_0050.jpeg
+処理中: hhh\IMG_0050.jpeg
 
 GPT結果 (gpt-4.1-mini)
 ```json
@@ -342,32 +315,31 @@ GPT結果 (gpt-4.1-mini)
 ```
 
 未読なし: 田番11
-CSV保存完了: C:/Users/user/foolder/zzz\田番11.csv
+CSV保存完了: zzz\田番11.csv
 
 未読なし: 田番9
-CSV保存完了: C:/Users/user/foolder/zzz\田番9.csv
+CSV保存完了: zzz\田番9.csv
 
 未読なし: 田番10
-CSV保存完了: C:/Users/user/foolder/zzz\田番10.csv
+CSV保存完了: zzz\田番10.csv
 
 未読なし: 田番8
-CSV保存完了: C:/Users/user/foolder/zzz\田番8.csv
+CSV保存完了: zzz\田番8.csv
 
 未読なし: 田番7
-CSV保存完了: C:/Users/user/foolder/zzz\田番7.csv
+CSV保存完了: zzz\田番7.csv
 
 未読なし: 田番6
-CSV保存完了: C:/Users/user/foolder/zzz\田番6.csv
+CSV保存完了: zzz\田番6.csv
 
 未読なし: 田番5
-CSV保存完了: C:/Users/user/foolder/zzz\田番5.csv
+CSV保存完了: zzz\田番5.csv
 
-未読あり: 田番3
-未読No: No.13, No.14, No.15, No.16
-CSV保存完了: C:/Users/user/foolder/zzz\田番3.csv
+未読なし: 田番3
+CSV保存完了: zzz\田番3.csv
 
 未読なし: 田番2
-CSV保存完了: C:/Users/user/foolder/zzz\田番2.csv
+CSV保存完了: zzz\田番2.csv
 
 未読なし: 田番1
-CSV保存完了: C:/Users/user/foolder/zzz\田番1.csv
+CSV保存完了: zzz\田番1.csv
