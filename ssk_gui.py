@@ -5,8 +5,11 @@ import csv
 import re
 import json
 import threading
+import queue
+import traceback
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from tkinter import ttk
 
 client = OpenAI()
 
@@ -20,6 +23,20 @@ expected_counts = {
     "13": 22,
     "12": 23,
 }
+
+allowed_items = [
+    "均平度",
+    "幅",
+    "厚さ",
+    "基準高",
+    "法長",
+    "延長",
+    "深さ",
+    "天端高",
+    "出来高",
+    "掘削深",
+    "盛土高"
+]
 
 
 def to_mm_text(value):
@@ -49,8 +66,23 @@ def gpt_ocr(image_path, model_name, log):
 重要:
 - 田番は上部の「田番」欄の数字
 - 大きく丸で書かれた手書き数字は田番にしない
-- 測定項目は「均平度」
-- 工種は「整地工」
+
+測定項目は次の候補から選択してください。
+
+- 均平度
+- 幅
+- 厚さ
+- 基準高
+- 法長
+- 延長
+- 深さ
+- 天端高
+- 出来高
+- 掘削深
+- 盛土高
+
+必ず上記候補から選択すること。
+候補に無い場合は「不明」を返すこと。
 
 読む項目:
 - 田番
@@ -108,7 +140,8 @@ def gpt_ocr(image_path, model_name, log):
     log(f"\nGPT結果 ({model_name})")
     log(result_text)
 
-    result_text = result_text.replace("```json", "").replace("```", "")
+    result_text = result_text.replace("```json", "")
+    result_text = result_text.replace("```", "")
 
     match_json = re.search(r"\{.*\}", result_text, re.DOTALL)
 
@@ -124,7 +157,7 @@ def gpt_ocr(image_path, model_name, log):
         return {}
 
 
-def run_ocr(image_folder, output_folder, log):
+def run_ocr(image_folder, output_folder, log, progress):
 
     os.makedirs(output_folder, exist_ok=True)
 
@@ -141,32 +174,41 @@ def run_ocr(image_folder, output_folder, log):
         if f.lower().endswith((".png", ".jpg", ".jpeg"))
     ])
 
-    if not image_files:
+    total_images = len(image_files)
+
+    if total_images == 0:
         save_log("画像がありません")
         return
 
     save_log("SSK写真 OCR → デキスパートCSV 自動作成開始")
+    save_log(f"画像枚数: {total_images}枚")
 
-    for image_name in image_files:
+    for index, image_name in enumerate(image_files, start=1):
+
+        progress(index, total_images)
 
         image_path = os.path.join(image_folder, image_name)
 
-        save_log(f"\n処理中: {image_path}")
+        save_log(f"\n処理中 ({index}/{total_images}): {image_path}")
 
         result = gpt_ocr(image_path, "gpt-4.1-mini", save_log)
 
         taban = str(result.get("taban", "")).strip()
+
         work_type = str(result.get("work_type", "整地工")).strip()
-        measurement_item = str(result.get("measurement_item", "均平度")).strip()
+
+        measurement_item = str(
+            result.get("measurement_item", "不明")
+        ).strip()
+
+        if measurement_item not in allowed_items:
+            measurement_item = "不明"
 
         design_value_raw = str(result.get("average", "")).strip()
         design_value = to_mm_text(design_value_raw)
 
         if work_type == "":
             work_type = "整地工"
-
-        if measurement_item == "":
-            measurement_item = "均平度"
 
         if taban not in expected_counts:
             taban = "未分類"
@@ -185,7 +227,6 @@ def run_ocr(image_folder, output_folder, log):
             }
 
         values = result.get("values", [])
-
         value_dict = {}
 
         for item in values:
@@ -205,6 +246,7 @@ def run_ocr(image_folder, output_folder, log):
                 missing_no.append(no)
 
         if missing_no:
+
             save_log("\n未読No検出")
             save_log(missing_no)
             save_log("\n4.1で再OCR実施")
@@ -243,6 +285,18 @@ def run_ocr(image_folder, output_folder, log):
 
     for taban, rows in csv_by_taban.items():
 
+        missing_no = []
+
+        for row in rows:
+            if row[4] == "":
+                missing_no.append(row[0])
+
+        if missing_no:
+            save_log(f"\n未読あり: 田番{taban}")
+            save_log("未読No: " + ", ".join(missing_no))
+        else:
+            save_log(f"\n未読なし: 田番{taban}")
+
         output_csv = os.path.join(output_folder, f"田番{taban}.csv")
 
         with open(output_csv, "w", newline="", encoding="utf-8-sig") as f:
@@ -258,7 +312,7 @@ def run_ocr(image_folder, output_folder, log):
 
             writer.writerows(rows)
 
-        save_log(f"\nCSV保存完了: {output_csv}")
+        save_log(f"CSV保存完了: {output_csv}")
 
     meta_csv = os.path.join(output_folder, "測定情報.csv")
 
@@ -298,18 +352,24 @@ def run_ocr(image_folder, output_folder, log):
         f.write("\n".join(log_lines))
 
     save_log("\n全部完了")
+    save_log(f"測定情報CSV保存完了: {meta_csv}")
     save_log(f"ログ保存完了: {log_path}")
 
 
 class App:
 
     def __init__(self, root):
+
         self.root = root
-        self.root.title("SSK OCR デキスパートCSV作成")
-        self.root.geometry("760x520")
+        self.root.title("SSK OCR デキスパートCSV作成 安定版")
+        self.root.geometry("820x600")
 
         self.image_folder = tk.StringVar()
         self.output_folder = tk.StringVar(value="ssk_output")
+        self.status_text = tk.StringVar(value="待機中")
+
+        self.message_queue = queue.Queue()
+        self.is_running = False
 
         tk.Label(root, text="写真フォルダ").pack(anchor="w", padx=10, pady=(10, 0))
 
@@ -317,7 +377,12 @@ class App:
         frame1.pack(fill="x", padx=10)
 
         tk.Entry(frame1, textvariable=self.image_folder).pack(side="left", fill="x", expand=True)
-        tk.Button(frame1, text="選択", command=self.select_image_folder).pack(side="left", padx=5)
+
+        tk.Button(
+            frame1,
+            text="選択",
+            command=self.select_image_folder
+        ).pack(side="left", padx=5)
 
         tk.Label(root, text="保存先フォルダ").pack(anchor="w", padx=10, pady=(10, 0))
 
@@ -325,17 +390,52 @@ class App:
         frame2.pack(fill="x", padx=10)
 
         tk.Entry(frame2, textvariable=self.output_folder).pack(side="left", fill="x", expand=True)
-        tk.Button(frame2, text="選択", command=self.select_output_folder).pack(side="left", padx=5)
 
         tk.Button(
+            frame2,
+            text="選択",
+            command=self.select_output_folder
+        ).pack(side="left", padx=5)
+
+        self.start_button = tk.Button(
             root,
             text="CSV作成開始",
             command=self.start,
             height=2
-        ).pack(fill="x", padx=10, pady=10)
+        )
+        self.start_button.pack(fill="x", padx=10, pady=10)
+
+        self.progress_bar = ttk.Progressbar(
+            root,
+            orient="horizontal",
+            mode="determinate"
+        )
+        self.progress_bar.pack(fill="x", padx=10)
+
+        tk.Label(
+            root,
+            textvariable=self.status_text
+        ).pack(anchor="w", padx=10, pady=(5, 0))
 
         self.log_text = tk.Text(root)
         self.log_text.pack(fill="both", expand=True, padx=10, pady=10)
+
+        frame3 = tk.Frame(root)
+        frame3.pack(fill="x", padx=10, pady=(0, 10))
+
+        tk.Button(
+            frame3,
+            text="保存先を開く",
+            command=self.open_output_folder
+        ).pack(side="left")
+
+        tk.Button(
+            frame3,
+            text="ログを消す",
+            command=self.clear_log
+        ).pack(side="left", padx=5)
+
+        self.root.after(100, self.process_queue)
 
     def select_image_folder(self):
         folder = filedialog.askdirectory()
@@ -348,11 +448,43 @@ class App:
             self.output_folder.set(folder)
 
     def log(self, message):
-        self.log_text.insert("end", str(message) + "\n")
-        self.log_text.see("end")
-        self.root.update_idletasks()
+        self.message_queue.put(("log", str(message)))
+
+    def progress(self, current, total):
+        self.message_queue.put(("progress", current, total))
+
+    def process_queue(self):
+        try:
+            while True:
+                item = self.message_queue.get_nowait()
+
+                if item[0] == "log":
+                    self.log_text.insert("end", item[1] + "\n")
+                    self.log_text.see("end")
+
+                elif item[0] == "progress":
+                    current = item[1]
+                    total = item[2]
+                    self.progress_bar["maximum"] = total
+                    self.progress_bar["value"] = current
+                    self.status_text.set(f"処理中: {current}/{total}")
+
+                elif item[0] == "done":
+                    self.finish_success()
+
+                elif item[0] == "error":
+                    self.finish_error(item[1])
+
+        except queue.Empty:
+            pass
+
+        self.root.after(100, self.process_queue)
 
     def start(self):
+
+        if self.is_running:
+            return
+
         image_folder = self.image_folder.get()
         output_folder = self.output_folder.get()
 
@@ -360,30 +492,74 @@ class App:
             messagebox.showerror("エラー", "写真フォルダを選択してください")
             return
 
+        if output_folder == "":
+            messagebox.showerror("エラー", "保存先フォルダを選択してください")
+            return
+
+        self.is_running = True
+        self.start_button.config(state="disabled", text="処理中...")
+        self.progress_bar["value"] = 0
+        self.status_text.set("開始しました")
+        self.log_text.insert("end", "\n--- 実行開始 ---\n")
+
         thread = threading.Thread(
             target=self.run_thread,
-            args=(image_folder, output_folder)
+            args=(image_folder, output_folder),
+            daemon=True
         )
+
         thread.start()
 
     def run_thread(self, image_folder, output_folder):
+
         try:
-            run_ocr(image_folder, output_folder, self.log)
-            messagebox.showinfo("完了", "CSV作成が完了しました")
-        except Exception as e:
-            self.log(e)
-            messagebox.showerror("エラー", str(e))
+            run_ocr(
+                image_folder,
+                output_folder,
+                self.log,
+                self.progress
+            )
+
+            self.message_queue.put(("done",))
+
+        except Exception:
+            error_text = traceback.format_exc()
+            self.message_queue.put(("error", error_text))
+
+    def finish_success(self):
+
+        self.is_running = False
+        self.start_button.config(state="normal", text="CSV作成開始")
+        self.status_text.set("完了")
+        messagebox.showinfo("完了", "CSV作成が完了しました")
+
+    def finish_error(self, error_text):
+
+        self.is_running = False
+        self.start_button.config(state="normal", text="CSV作成開始")
+        self.status_text.set("エラー発生")
+
+        self.log_text.insert("end", "\n--- エラー詳細 ---\n")
+        self.log_text.insert("end", error_text + "\n")
+        self.log_text.see("end")
+
+        messagebox.showerror("エラー", "処理中にエラーが発生しました。ログを確認してください。")
+
+    def open_output_folder(self):
+
+        folder = self.output_folder.get()
+
+        if folder == "":
+            messagebox.showerror("エラー", "保存先フォルダが空です")
+            return
+
+        os.makedirs(folder, exist_ok=True)
+        os.startfile(folder)
+
+    def clear_log(self):
+        self.log_text.delete("1.0", "end")
 
 
 root = tk.Tk()
 app = App(root)
 root.mainloop()
-
-
-
-
-
-
-
-
-
