@@ -1,14 +1,17 @@
+import tkinter as tk
+from tkinter import filedialog, messagebox, scrolledtext
 from openai import OpenAI
 import base64
 import os
 import csv
 import re
 import json
+import threading
 
 client = OpenAI()
 
 # =========================
-# 田番マスタ読込
+# マスタ読込
 # =========================
 
 expected_counts = {}
@@ -19,12 +22,6 @@ with open("master_taban.csv", encoding="utf-8-sig") as f:
     for row in reader:
         expected_counts[str(row["田番"]).strip()] = int(row["測点数"])
 
-print("田番マスタ読込:", expected_counts)
-
-# =========================
-# 測定項目マスタ読込
-# =========================
-
 allowed_items = []
 
 with open("master_items.csv", encoding="utf-8-sig") as f:
@@ -32,12 +29,6 @@ with open("master_items.csv", encoding="utf-8-sig") as f:
 
     for row in reader:
         allowed_items.append(row["測定項目"].strip())
-
-print("測定項目マスタ読込:", ", ".join(allowed_items))
-
-# =========================
-# 工種マスタ読込
-# =========================
 
 work_master = {}
 
@@ -49,12 +40,6 @@ with open("master_work.csv", encoding="utf-8-sig") as f:
         work = row["工種"].strip()
 
         work_master[item] = work
-
-print("工種マスタ読込:", work_master)
-
-# =========================
-# 規格値マスタ読込
-# =========================
 
 spec_master = {}
 
@@ -68,8 +53,6 @@ with open("master_spec.csv", encoding="utf-8-sig") as f:
             "spec": row["規格値"].strip(),
             "target": row["社内目標値"].strip()
         }
-
-print("規格値マスタ読込:", spec_master)
 
 # =========================
 # mm変換
@@ -189,10 +172,10 @@ def gpt_ocr(image_path, model_name, log):
         return {}
 
 # =========================
-# OCRメイン
+# OCR本体
 # =========================
 
-def run_ocr(image_folder, output_folder):
+def run_ocr(image_folder, output_folder, log):
 
     os.makedirs(output_folder, exist_ok=True)
 
@@ -200,8 +183,8 @@ def run_ocr(image_folder, output_folder):
     meta_by_taban = {}
     log_lines = []
 
-    def log(message):
-        print(message)
+    def add_log(message):
+        log(message)
         log_lines.append(str(message))
 
     image_files = sorted([
@@ -212,18 +195,19 @@ def run_ocr(image_folder, output_folder):
     total_images = len(image_files)
 
     if total_images == 0:
-        log("画像がありません")
+        add_log("画像がありません")
         return
 
-    log("SSK写真 OCR → デキスパートCSV 自動作成開始")
+    add_log("SSK写真 OCR → デキスパートCSV 自動作成開始")
+    add_log(f"画像数: {total_images}")
 
     for index, image_name in enumerate(image_files, start=1):
 
         image_path = os.path.join(image_folder, image_name)
 
-        log(f"\n処理中: {image_path}")
+        add_log(f"\n[{index}/{total_images}] 処理中: {image_path}")
 
-        result = gpt_ocr(image_path, "gpt-4.1-mini", log)
+        result = gpt_ocr(image_path, "gpt-4.1-mini", add_log)
 
         taban = str(result.get("taban", "")).strip()
 
@@ -294,15 +278,15 @@ def run_ocr(image_folder, output_folder):
 
         if missing_no:
 
-            log("\n未読No検出")
-            log(missing_no)
+            add_log("\n未読No検出")
+            add_log(missing_no)
 
-            log("\n4.1で再OCR実施")
+            add_log("\n4.1で再OCR実施")
 
             retry_result = gpt_ocr(
                 image_path,
                 "gpt-4.1",
-                log
+                add_log
             )
 
             for item in retry_result.get("values", []):
@@ -337,23 +321,9 @@ def run_ocr(image_folder, output_folder):
                 value_text
             ])
 
-    # =========================
     # CSV保存
-    # =========================
 
     for taban, rows in csv_by_taban.items():
-
-        missing_no = []
-
-        for row in rows:
-            if row[4] == "":
-                missing_no.append(row[0])
-
-        if missing_no:
-            log(f"\n未読あり: 田番{taban}")
-            log("未読No: " + ", ".join(missing_no))
-        else:
-            log(f"\n未読なし: 田番{taban}")
 
         output_csv = os.path.join(
             output_folder,
@@ -379,11 +349,9 @@ def run_ocr(image_folder, output_folder):
 
             writer.writerows(rows)
 
-        log(f"CSV保存完了: {output_csv}")
+        add_log(f"CSV保存完了: {output_csv}")
 
-    # =========================
     # 測定情報CSV
-    # =========================
 
     meta_csv = os.path.join(
         output_folder,
@@ -427,9 +395,7 @@ def run_ocr(image_folder, output_folder):
                 meta.get("Xmin", "")
             ])
 
-    # =========================
     # ログ保存
-    # =========================
 
     log_path = os.path.join(
         output_folder,
@@ -444,19 +410,143 @@ def run_ocr(image_folder, output_folder):
 
         f.write("\n".join(log_lines))
 
-    log("\n全部完了")
-    log(f"測定情報CSV保存完了: {meta_csv}")
-    log(f"ログ保存完了: {log_path}")
+    add_log("\n全部完了")
+    add_log(f"測定情報CSV保存完了: {meta_csv}")
+    add_log(f"ログ保存完了: {log_path}")
+
+    messagebox.showinfo(
+        "完了",
+        "OCR処理が完了しました"
+    )
 
 # =========================
-# 実行
+# GUI
 # =========================
 
-image_folder = "hhh"
-output_folder = "zzz"
+root = tk.Tk()
+root.title("SSK OCR GUI")
+root.geometry("900x700")
 
-run_ocr(
-    image_folder,
-    output_folder
+image_folder_var = tk.StringVar()
+output_folder_var = tk.StringVar()
+
+# -------------------------
+
+def select_image_folder():
+    folder = filedialog.askdirectory()
+
+    if folder:
+        image_folder_var.set(folder)
+
+# -------------------------
+
+def select_output_folder():
+    folder = filedialog.askdirectory()
+
+    if folder:
+        output_folder_var.set(folder)
+
+# -------------------------
+
+def write_log(message):
+
+    log_text.insert(tk.END, str(message) + "\n")
+    log_text.see(tk.END)
+
+# -------------------------
+
+def start_ocr():
+
+    image_folder = image_folder_var.get()
+    output_folder = output_folder_var.get()
+
+    if not image_folder:
+        messagebox.showerror(
+            "エラー",
+            "画像フォルダを選択してください"
+        )
+        return
+
+    if not output_folder:
+        messagebox.showerror(
+            "エラー",
+            "出力フォルダを選択してください"
+        )
+        return
+
+    thread = threading.Thread(
+        target=run_ocr,
+        args=(image_folder, output_folder, write_log)
+    )
+
+    thread.start()
+
+# =========================
+# GUI配置
+# =========================
+
+tk.Label(
+    root,
+    text="画像フォルダ"
+).pack(pady=5)
+
+tk.Entry(
+    root,
+    textvariable=image_folder_var,
+    width=100
+).pack()
+
+tk.Button(
+    root,
+    text="画像フォルダ選択",
+    command=select_image_folder
+).pack(pady=5)
+
+# -------------------------
+
+tk.Label(
+    root,
+    text="出力フォルダ"
+).pack(pady=5)
+
+tk.Entry(
+    root,
+    textvariable=output_folder_var,
+    width=100
+).pack()
+
+tk.Button(
+    root,
+    text="出力フォルダ選択",
+    command=select_output_folder
+).pack(pady=5)
+
+# -------------------------
+
+tk.Button(
+    root,
+    text="OCR実行",
+    command=start_ocr,
+    bg="green",
+    fg="white",
+    height=2,
+    width=20
+).pack(pady=10)
+
+# -------------------------
+
+log_text = scrolledtext.ScrolledText(
+    root,
+    width=120,
+    height=30
 )
+
+log_text.pack(padx=10, pady=10)
+
+# =========================
+# 起動
+# =========================
+
+root.mainloop()
+
 
