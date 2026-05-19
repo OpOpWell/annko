@@ -7,43 +7,73 @@ import json
 
 client = OpenAI()
 
-expected_counts = {
-    "19": 30,
-    "18": 16,
-    "17": 14,
-    "16": 12,
-    "15": 12,
-    "14": 11,
-    "13": 22,
-    "12": 23,
+# =========================
+# 田番マスタ読込
+# =========================
 
-    "11": 26,
-    "10": 11,
-    "9": 10,
-    "8": 10,
-    "7": 10,
-    "6": 10,
-    "5": 9,
-    "4": 0,
-    "3": 16,
-    "2": 5,
-    "1": 12
-}
+expected_counts = {}
 
-allowed_items = [
-    "均平度",
-    "幅",
-    "厚さ",
-    "基準高",
-    "法長",
-    "延長",
-    "深さ",
-    "天端高",
-    "出来高",
-    "掘削深",
-    "盛土高"
-]
+with open("master_taban.csv", encoding="utf-8-sig") as f:
+    reader = csv.DictReader(f)
 
+    for row in reader:
+        expected_counts[str(row["田番"]).strip()] = int(row["測点数"])
+
+print("田番マスタ読込:", expected_counts)
+
+# =========================
+# 測定項目マスタ読込
+# =========================
+
+allowed_items = []
+
+with open("master_items.csv", encoding="utf-8-sig") as f:
+    reader = csv.DictReader(f)
+
+    for row in reader:
+        allowed_items.append(row["測定項目"].strip())
+
+print("測定項目マスタ読込:", ", ".join(allowed_items))
+
+# =========================
+# 工種マスタ読込
+# =========================
+
+work_master = {}
+
+with open("master_work.csv", encoding="utf-8-sig") as f:
+    reader = csv.DictReader(f)
+
+    for row in reader:
+        item = row["測定項目"].strip()
+        work = row["工種"].strip()
+
+        work_master[item] = work
+
+print("工種マスタ読込:", work_master)
+
+# =========================
+# 規格値マスタ読込
+# =========================
+
+spec_master = {}
+
+with open("master_spec.csv", encoding="utf-8-sig") as f:
+    reader = csv.DictReader(f)
+
+    for row in reader:
+        item = row["測定項目"].strip()
+
+        spec_master[item] = {
+            "spec": row["規格値"].strip(),
+            "target": row["社内目標値"].strip()
+        }
+
+print("規格値マスタ読込:", spec_master)
+
+# =========================
+# mm変換
+# =========================
 
 def to_mm_text(value):
     try:
@@ -51,6 +81,9 @@ def to_mm_text(value):
     except:
         return ""
 
+# =========================
+# GPT OCR
+# =========================
 
 def gpt_ocr(image_path, model_name, log):
 
@@ -95,9 +128,6 @@ def gpt_ocr(image_path, model_name, log):
 - 工種
 - 測定項目
 - 面積
-- 測定基準
-- 規格値
-- 社内目標値
 - 平均値
 - Xmax
 - Xmin
@@ -116,12 +146,8 @@ def gpt_ocr(image_path, model_name, log):
 返却形式:
 {
   "taban": "19",
-  "work_type": "整地工",
   "measurement_item": "均平度",
   "area": "9750㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
   "average": "1.410",
   "xmax": "1.400",
   "xmin": "1.421",
@@ -162,6 +188,9 @@ def gpt_ocr(image_path, model_name, log):
         log(e)
         return {}
 
+# =========================
+# OCRメイン
+# =========================
 
 def run_ocr(image_folder, output_folder):
 
@@ -198,8 +227,6 @@ def run_ocr(image_folder, output_folder):
 
         taban = str(result.get("taban", "")).strip()
 
-        work_type = str(result.get("work_type", "整地工")).strip()
-
         measurement_item = str(
             result.get("measurement_item", "不明")
         ).strip()
@@ -207,11 +234,26 @@ def run_ocr(image_folder, output_folder):
         if measurement_item not in allowed_items:
             measurement_item = "不明"
 
-        design_value_raw = str(result.get("average", "")).strip()
-        design_value = to_mm_text(design_value_raw)
+        work_type = work_master.get(
+            measurement_item,
+            "整地工"
+        )
 
-        if work_type == "":
-            work_type = "整地工"
+        spec_value = spec_master.get(
+            measurement_item,
+            {}
+        ).get("spec", "")
+
+        target_value = spec_master.get(
+            measurement_item,
+            {}
+        ).get("target", "")
+
+        design_value_raw = str(
+            result.get("average", "")
+        ).strip()
+
+        design_value = to_mm_text(design_value_raw)
 
         if taban not in expected_counts:
             taban = "未分類"
@@ -221,21 +263,23 @@ def run_ocr(image_folder, output_folder):
                 "工種": work_type,
                 "測定項目": measurement_item,
                 "面積": result.get("area", ""),
-                "測定基準": result.get("standard", ""),
-                "規格値": result.get("spec_value", ""),
-                "社内目標値": result.get("target_value", ""),
+                "測定基準": "10a当たり3点以上",
+                "規格値": spec_value,
+                "社内目標値": target_value,
                 "設計値": design_value,
                 "Xmax": result.get("xmax", ""),
                 "Xmin": result.get("xmin", ""),
             }
 
         values = result.get("values", [])
+
         value_dict = {}
 
         for item in values:
             try:
                 no = int(item["no"])
                 value = float(item["value"])
+
                 value_dict[no] = value
             except:
                 pass
@@ -252,17 +296,24 @@ def run_ocr(image_folder, output_folder):
 
             log("\n未読No検出")
             log(missing_no)
+
             log("\n4.1で再OCR実施")
 
-            retry_result = gpt_ocr(image_path, "gpt-4.1", log)
+            retry_result = gpt_ocr(
+                image_path,
+                "gpt-4.1",
+                log
+            )
 
             for item in retry_result.get("values", []):
+
                 try:
                     no = int(item["no"])
                     value = float(item["value"])
 
                     if no not in value_dict:
                         value_dict[no] = value
+
                 except:
                     pass
 
@@ -286,6 +337,10 @@ def run_ocr(image_folder, output_folder):
                 value_text
             ])
 
+    # =========================
+    # CSV保存
+    # =========================
+
     for taban, rows in csv_by_taban.items():
 
         missing_no = []
@@ -300,9 +355,18 @@ def run_ocr(image_folder, output_folder):
         else:
             log(f"\n未読なし: 田番{taban}")
 
-        output_csv = os.path.join(output_folder, f"田番{taban}.csv")
+        output_csv = os.path.join(
+            output_folder,
+            f"田番{taban}.csv"
+        )
 
-        with open(output_csv, "w", newline="", encoding="utf-8-sig") as f:
+        with open(
+            output_csv,
+            "w",
+            newline="",
+            encoding="utf-8-sig"
+        ) as f:
+
             writer = csv.writer(f)
 
             writer.writerow([
@@ -317,9 +381,22 @@ def run_ocr(image_folder, output_folder):
 
         log(f"CSV保存完了: {output_csv}")
 
-    meta_csv = os.path.join(output_folder, "測定情報.csv")
+    # =========================
+    # 測定情報CSV
+    # =========================
 
-    with open(meta_csv, "w", newline="", encoding="utf-8-sig") as f:
+    meta_csv = os.path.join(
+        output_folder,
+        "測定情報.csv"
+    )
+
+    with open(
+        meta_csv,
+        "w",
+        newline="",
+        encoding="utf-8-sig"
+    ) as f:
+
         writer = csv.writer(f)
 
         writer.writerow([
@@ -336,6 +413,7 @@ def run_ocr(image_folder, output_folder):
         ])
 
         for taban, meta in meta_by_taban.items():
+
             writer.writerow([
                 taban,
                 meta.get("工種", ""),
@@ -349,15 +427,30 @@ def run_ocr(image_folder, output_folder):
                 meta.get("Xmin", "")
             ])
 
-    log_path = os.path.join(output_folder, "ssk_ocr_log.txt")
+    # =========================
+    # ログ保存
+    # =========================
 
-    with open(log_path, "w", encoding="utf-8") as f:
+    log_path = os.path.join(
+        output_folder,
+        "ssk_ocr_log.txt"
+    )
+
+    with open(
+        log_path,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
         f.write("\n".join(log_lines))
 
     log("\n全部完了")
     log(f"測定情報CSV保存完了: {meta_csv}")
     log(f"ログ保存完了: {log_path}")
 
+# =========================
+# 実行
+# =========================
 
 image_folder = "hhh"
 output_folder = "zzz"
@@ -366,3 +459,4 @@ run_ocr(
     image_folder,
     output_folder
 )
+

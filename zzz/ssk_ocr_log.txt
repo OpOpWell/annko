@@ -1,20 +1,12 @@
-田番マスタ読込: {'19': 30, '18': 16, '17': 14, '16': 12, '15': 12, '14': 11, '13': 22, '12': 23, '11': 26, '10': 11, '9': 10, '8': 10, '7': 10, '6': 10, '5': 9, '4': 0, '3': 16, '2': 5, '1': 12}
-測定項目マスタ読込: 均平度, 幅, 厚さ, 基準高, 法長, 延長, 深さ, 天端高, 出来高, 掘削深, 盛土高
-工種マスタ読込: {'均平度': '整地工', '幅': '整地工', '厚さ': '整地工', '基準高': '整地工', '法長': '整地工', '延長': '整地工', '深さ': '整地工', '天端高': '整地工', '出来高': '整地工', '掘削深': '整地工', '盛土高': '整地工'}
 SSK写真 OCR → デキスパートCSV 自動作成開始
 
 処理中: hhh\IMG_0039.jpeg
 
 GPT結果 (gpt-4.1-mini)
-```json
 {
   "taban": "11",
-  "work_type": "整地工",
   "measurement_item": "均平度",
   "area": "8090㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
   "average": "1.420",
   "xmax": "1.426",
   "xmin": "1.413",
@@ -26,8 +18,8 @@ GPT結果 (gpt-4.1-mini)
     {"no": 5, "value": 1.425},
     {"no": 6, "value": 1.422},
     {"no": 7, "value": 1.413},
-    {"no": 8, "value": 1.424},
-    {"no": 9, "value": 1.421},
+    {"no": 8, "value": 1.426},
+    {"no": 9, "value": 1.419},
     {"no": 10, "value": 1.425},
     {"no": 11, "value": 1.423},
     {"no": 12, "value": 1.414},
@@ -47,20 +39,14 @@ GPT結果 (gpt-4.1-mini)
     {"no": 26, "value": 1.416}
   ]
 }
-```
 
 処理中: hhh\IMG_0041.jpeg
 
 GPT結果 (gpt-4.1-mini)
-```json
 {
   "taban": "9",
-  "work_type": "整地工",
   "measurement_item": "均平度",
   "area": "3270㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
   "average": "1.452",
   "xmax": "1.446",
   "xmin": "1.465",
@@ -77,20 +63,14 @@ GPT結果 (gpt-4.1-mini)
     {"no": 10, "value": 1.465}
   ]
 }
-```
 
 処理中: hhh\IMG_0042.jpeg
 
 GPT結果 (gpt-4.1-mini)
-```json
 {
   "taban": "10",
-  "work_type": "整地工",
   "measurement_item": "均平度",
   "area": "3310㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
   "average": "1.467",
   "xmax": "1.464",
   "xmin": "1.474",
@@ -108,20 +88,14 @@ GPT結果 (gpt-4.1-mini)
     {"no": 11, "value": 1.474}
   ]
 }
-```
 
 処理中: hhh\IMG_0043.jpeg
 
 GPT結果 (gpt-4.1-mini)
-```json
 {
   "taban": "8",
-  "work_type": "整地工",
   "measurement_item": "均平度",
   "area": "3030㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
   "average": "1.399",
   "xmax": "1.409",
   "xmin": "1.391",
@@ -138,7 +112,6 @@ GPT結果 (gpt-4.1-mini)
     {"no": 10, "value": 1.407}
   ]
 }
-```
 
 処理中: hhh\IMG_0044.jpeg
 
@@ -146,12 +119,8 @@ GPT結果 (gpt-4.1-mini)
 ```json
 {
   "taban": "7",
-  "work_type": "整地工",
   "measurement_item": "均平度",
   "area": "3200㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
   "average": "1.414",
   "xmax": "1.400",
   "xmin": "1.421",
@@ -175,15 +144,11 @@ GPT結果 (gpt-4.1-mini)
 GPT結果 (gpt-4.1-mini)
 {
   "taban": "6",
-  "work_type": "整地工",
   "measurement_item": "均平度",
   "area": "3220㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
   "average": "1.452",
-  "xmax": "1.444",
-  "xmin": "1.462",
+  "xmax": "1.460",
+  "xmin": "1.444",
   "values": [
     {"no": 1, "value": 1.449},
     {"no": 2, "value": 1.460},
@@ -201,20 +166,15 @@ GPT結果 (gpt-4.1-mini)
 処理中: hhh\IMG_0047.jpeg
 
 GPT結果 (gpt-4.1-mini)
-```json
 {
   "taban": "5",
-  "work_type": "整地工",
   "measurement_item": "均平度",
   "area": "3210㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
   "average": "1.375",
   "xmax": "1.386",
   "xmin": "1.366",
   "values": [
-    {"no": 1, "value": 1.386},
+    {"no": 1, "value": 1.380},
     {"no": 2, "value": 1.380},
     {"no": 3, "value": 1.372},
     {"no": 4, "value": 1.386},
@@ -225,58 +185,47 @@ GPT結果 (gpt-4.1-mini)
     {"no": 9, "value": 1.380}
   ]
 }
-```
 
 処理中: hhh\IMG_0048.jpeg
 
 GPT結果 (gpt-4.1-mini)
 {
   "taban": "3",
-  "work_type": "整地工",
   "measurement_item": "均平度",
   "area": "4180㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
   "average": "1.461",
   "xmax": "1.458",
   "xmin": "1.476",
   "values": [
     {"no": 1, "value": 1.479},
     {"no": 2, "value": 1.452},
-    {"no": 3, "value": 1.455},
+    {"no": 3, "value": 1.453},
     {"no": 4, "value": 1.473},
     {"no": 5, "value": 1.476},
-    {"no": 6, "value": 1.451},
-    {"no": 7, "value": 1.478},
-    {"no": 8, "value": 1.457},
-    {"no": 9, "value": 1.458},
-    {"no": 10, "value": 1.466},
-    {"no": 11, "value": 1.461},
+    {"no": 6, "value": 1.456},
+    {"no": 7, "value": 1.451},
+    {"no": 8, "value": 1.478},
+    {"no": 9, "value": 1.457},
+    {"no": 10, "value": 1.458},
+    {"no": 11, "value": 1.466},
     {"no": 12, "value": 1.450},
     {"no": 13, "value": 1.470},
     {"no": 14, "value": 1.455},
-    {"no": 15, "value": 1.473},
-    {"no": 16, "value": 1.451},
-    {"no": 17, "value": 1.459}
+    {"no": 15, "value": 1.451},
+    {"no": 16, "value": 1.459}
   ]
 }
 
 処理中: hhh\IMG_0049.jpeg
 
 GPT結果 (gpt-4.1-mini)
-```json
 {
   "taban": "2",
-  "work_type": "整地工",
   "measurement_item": "均平度",
   "area": "1340㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
   "average": "1.401",
-  "xmax": "1.394",
-  "xmin": "1.409",
+  "xmax": "1.409",
+  "xmin": "1.394",
   "values": [
     {"no": 1, "value": 1.397},
     {"no": 2, "value": 1.406},
@@ -285,23 +234,17 @@ GPT結果 (gpt-4.1-mini)
     {"no": 5, "value": 1.409}
   ]
 }
-```
 
 処理中: hhh\IMG_0050.jpeg
 
 GPT結果 (gpt-4.1-mini)
-```json
 {
   "taban": "1",
-  "work_type": "整地工",
   "measurement_item": "均平度",
   "area": "3540㎡",
-  "standard": "10a当たり3点以上",
-  "spec_value": "±50mm",
-  "target_value": "±40mm",
   "average": "1.428",
-  "xmax": "1.417",
-  "xmin": "1.434",
+  "xmax": "1.434",
+  "xmin": "1.417",
   "values": [
     {"no": 1, "value": 1.426},
     {"no": 2, "value": 1.430},
@@ -317,7 +260,6 @@ GPT結果 (gpt-4.1-mini)
     {"no": 12, "value": 1.429}
   ]
 }
-```
 
 未読なし: 田番11
 CSV保存完了: zzz\田番11.csv
