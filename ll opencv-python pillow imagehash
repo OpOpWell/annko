@@ -1,0 +1,48 @@
+[33m64ff156[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m EXE配布版 完成
+[33m9642a10[m CLI安定版 GUI分離 完成
+[33m21bcafd[m GUI統合版 完成
+[33mc21aa77[m 規格値マスタ追加
+[33mafa04d9[m 工種マスタ化 完成
+[33mfda50b6[m CLI安定版 田番1-19対応 完成
+[33m70ffe4f[m 田番1-19対応 GUI安定版 完成
+[33mba8a32e[m GUI安定版 完成
+[33mef63df0[m 項目自動認識 GUI版 完成
+[33mabb55e0[m 項目自動認識 前
+[33m3b8c9cd[m デキスパート用 mm変換CSV 完成
+[33m28a8090[m SSK excel automation complete
+[33m716f8cf[m SSK OCR complete
+[33m8175b0b[m SSK OCR complete
+[33mca806cd[m OCR FINAL COMPLETE A
+[33m6b3bbe9[m OCR FINAL COMPLETE
+[33m82a69c2[m OCR FINAL COMPLETE
+[33m07dfebe[m 未読再OCR版 完成
+[33mec6d53d[m test9_final 完成
+[33m09e2881[m test9_final 完成
+[33mf92a51c[m 田番別CSV 完成版
+[33m0a9f498[m 田番別No連番OCR完成
+[33md05ed7b[m 田番別デキスパートCSV自動化完成
+[33mdc7ea57[m 番号付きGPT OCR完成版
+[33m79144e5[m 番号付きOCRとJSON抽出修正版
+[33m5d1b336[m 番号付きGPT OCRへ変更
+[33m869e922[m GPT OCRで測定値をCSV化
+[33m6c991ae[m 画像名から開始測点を取得して連番CSV生成
+[33m961d50c[m 画像名から測点名取得版を保存
+[33m388e57d[m 測点名と測定項目名付きCSV取込成功
+[33mcf3f493[m ExcelなしCSV専用版を保存
+[33m23b5641[m Excel出力あり版を保存
+[33m5a34aaf[m OCR結果をデキスパートCSV出力
+[33m980df46[m OCR誤読値を範囲で除外
+[33m3d75347[m 複数画像OCR入力に対応
+[33m5b10b0f[m OCR自動入力成功版
+[33m5f8e32b[m OCR白黒化まで成功
+[33m1f46c16[m OCR数値抽出成功
+[33m0b8363a[m OCR数値抽出を改善
+[33m054bc62[m OCRからExcel自動入力成功
+[33mee85366[m 結合セル対応
+[33m5111a57[m Excel自動入力成功
+[33mb78ccaf[m gitignore追加
+[33m0bdc360[m 不要フォルダ削除
+[33m8dd6414[m 数値OCR成功
+[33med00b97[m OCR成功
+[33m89aecb3[m print追加
+[33m3c7aa28[m 最初の保存
