@@ -218,7 +218,7 @@ class PhotoCleanerGUI:
             "AI写真整理 OCR自動接続"
         )
 
-        self.root.geometry("950x750")
+        self.root.geometry("1000x760")
 
         self.input_folder = tk.StringVar(
             value=r"C:\Users\user\foolder\634\images_all"
@@ -231,6 +231,8 @@ class PhotoCleanerGUI:
         self.auto_ocr = tk.BooleanVar(value=True)
 
         self.blur_check = tk.BooleanVar(value=True)
+
+        self.ocr_check = tk.BooleanVar(value=True)
 
         self.create_widgets()
 
@@ -292,6 +294,12 @@ class PhotoCleanerGUI:
             option_frame,
             text="OCR自動実行",
             variable=self.auto_ocr
+        ).pack(side="left", padx=5)
+
+        tk.Checkbutton(
+            option_frame,
+            text="OCR信頼度チェック",
+            variable=self.ocr_check
         ).pack(side="left", padx=5)
 
         tk.Button(
@@ -420,8 +428,6 @@ class PhotoCleanerGUI:
             ng_folder
         ]
 
-        # フォルダ初期化
-
         for folder in folders:
 
             os.makedirs(
@@ -465,8 +471,6 @@ class PhotoCleanerGUI:
             self.write_log("")
             self.write_log(f"処理中: {image_name}")
 
-            # ブレ判定
-
             if self.blur_check.get():
 
                 score = blur_score(image_path)
@@ -488,8 +492,6 @@ class PhotoCleanerGUI:
 
                     continue
 
-            # GPT判定
-
             result = gpt_photo_check(image_path)
 
             category = result.get(
@@ -505,8 +507,6 @@ class PhotoCleanerGUI:
             self.write_log(f"分類: {category}")
             self.write_log(f"理由: {reason}")
             self.write_log(f"GPT結果: {result}")
-
-            # 保存先
 
             if category == "出来形測定写真":
 
@@ -570,17 +570,40 @@ class PhotoCleanerGUI:
             f"出力先: {output_folder}"
         )
 
-        # OCR起動
-
         if self.auto_ocr.get():
+
+            if self.ocr_check.get():
+
+                self.write_log("")
+                self.write_log("OCR信頼度チェック: ON")
+
+            else:
+
+                self.write_log("")
+                self.write_log("OCR信頼度チェック: OFF")
 
             self.write_log("")
             self.write_log("OCR自動接続開始")
 
-            subprocess.run([
-                PYTHON_EXE,
-                ANKO_SCRIPT
-            ])
+            process = subprocess.Popen(
+                [
+                    PYTHON_EXE,
+                    ANKO_SCRIPT
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="cp932",
+                errors="ignore"
+            )
+
+            for line in process.stdout:
+
+                line = line.rstrip()
+
+                self.write_log(line)
+
+            process.wait()
 
             self.write_log("OCR自動接続完了")
 
@@ -593,8 +616,8 @@ if __name__ == "__main__":
 
     root = tk.Tk()
 
+    
+
     app = PhotoCleanerGUI(root)
 
     root.mainloop()
-
-    
