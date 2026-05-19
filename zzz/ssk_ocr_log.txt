@@ -31,6 +31,7 @@ OCR判定: 要確認
 処理中: C:\Users\user\foolder\634\photo_sorted\出来形測定写真\IMG_0043.jpeg
 
 GPT結果 (gpt-4.1-mini)
+```json
 {
   "taban": "8",
   "measurement_item": "均平度",
@@ -51,12 +52,14 @@ GPT結果 (gpt-4.1-mini)
     {"no": 10, "value": 1.407}
   ]
 }
+```
 OCR信頼度: 100
 OCR判定: OK
 
 処理中: C:\Users\user\foolder\634\photo_sorted\出来形測定写真\IMG_0047.jpeg
 
 GPT結果 (gpt-4.1-mini)
+```json
 {
   "taban": "5",
   "measurement_item": "均平度",
@@ -70,14 +73,16 @@ GPT結果 (gpt-4.1-mini)
     {"no": 3, "value": 1.372},
     {"no": 4, "value": 1.386},
     {"no": 5, "value": 1.378},
-    {"no": 6, "value": 1.366},
+    {"no": 6, "value": 1.376},
     {"no": 7, "value": 1.370},
     {"no": 8, "value": 1.385},
     {"no": 9, "value": 1.380}
   ]
 }
-OCR信頼度: 100
-OCR判定: OK
+```
+OCR信頼度: 85
+OCR判定: 要確認
+注意: 最小値が合いません。OCR:1.366 / 計算:1.37
 
 未読なし: 田番9
 CSV保存完了: C:\Users\user\foolder\zzz\田番9.csv
@@ -87,3 +92,4 @@ CSV保存完了: C:\Users\user\foolder\zzz\田番8.csv
 
 未読なし: 田番5
 CSV保存完了: C:\Users\user\foolder\zzz\田番5.csv
+要確認レポートCSV保存完了: C:\Users\user\foolder\zzz\ocr_check_report.csv

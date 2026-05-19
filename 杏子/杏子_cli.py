@@ -206,6 +206,7 @@ def run_ocr(image_folder, output_folder):
     csv_by_taban = {}
     meta_by_taban = {}
     log_lines = []
+    check_report_rows = []
 
     def log(message):
         print(message)
@@ -248,6 +249,17 @@ def run_ocr(image_folder, output_folder):
 
         for warning in check["warnings"]:
             log(f"注意: {warning}")
+
+        if check["level"] != "OK":
+
+            check_report_rows.append([
+                image_name,
+                result.get("taban", ""),
+                result.get("measurement_item", ""),
+                check["score"],
+                check["level"],
+                " / ".join(check["warnings"])
+            ])
 
         taban = str(result.get("taban", "")).strip()
 
@@ -452,6 +464,37 @@ def run_ocr(image_folder, output_folder):
             ])
 
     # =========================
+    # 要確認レポートCSV
+    # =========================
+
+    report_csv = os.path.join(
+        output_folder,
+        "ocr_check_report.csv"
+    )
+
+    with open(
+        report_csv,
+        "w",
+        newline="",
+        encoding="utf-8-sig"
+    ) as f:
+
+        writer = csv.writer(f)
+
+        writer.writerow([
+            "画像名",
+            "田番",
+            "測定項目",
+            "信頼度",
+            "判定",
+            "注意内容"
+        ])
+
+        writer.writerows(check_report_rows)
+
+    log(f"要確認レポートCSV保存完了: {report_csv}")
+
+    # =========================
     # ログ保存
     # =========================
 
@@ -485,8 +528,3 @@ run_ocr(
     image_folder,
     output_folder
 )
-
-
-
-
-
