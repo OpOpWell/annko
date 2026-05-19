@@ -3,7 +3,6 @@ SSK写真 OCR → デキスパートCSV 自動作成開始
 処理中: C:\Users\user\foolder\634\photo_sorted\出来形測定写真\IMG_0041.jpeg
 
 GPT結果 (gpt-4.1-mini)
-```json
 {
   "taban": "9",
   "measurement_item": "均平度",
@@ -24,12 +23,10 @@ GPT結果 (gpt-4.1-mini)
     {"no": 10, "value": 1.465}
   ]
 }
-```
 
 処理中: C:\Users\user\foolder\634\photo_sorted\出来形測定写真\IMG_0043.jpeg
 
 GPT結果 (gpt-4.1-mini)
-```json
 {
   "taban": "8",
   "measurement_item": "均平度",
@@ -50,7 +47,6 @@ GPT結果 (gpt-4.1-mini)
     {"no": 10, "value": 1.407}
   ]
 }
-```
 
 処理中: C:\Users\user\foolder\634\photo_sorted\出来形測定写真\IMG_0047.jpeg
 
