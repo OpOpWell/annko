@@ -452,8 +452,10 @@ def run_ocr(image_folder, output_folder):
 # 実行
 # =========================
 
-image_folder = "hhh"
-output_folder = "zzz"
+image_folder = r"C:\Users\user\foolder\634\photo_sorted\出来形測定写真"
+
+output_folder = r"C:\Users\user\foolder\zzz"
+
 
 run_ocr(
     image_folder,
