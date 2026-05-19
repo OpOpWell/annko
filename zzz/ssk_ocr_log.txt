@@ -1,10 +1,8 @@
 SSK写真 OCR → デキスパートCSV 自動作成開始
-画像数: 10
 
-[1/10] 処理中: C:/Users/user/OneDrive/hhh\IMG_0039.jpeg
+処理中: hhh\IMG_0039.jpeg
 
 GPT結果 (gpt-4.1-mini)
-```json
 {
   "taban": "11",
   "measurement_item": "均平度",
@@ -20,8 +18,8 @@ GPT結果 (gpt-4.1-mini)
     {"no": 5, "value": 1.425},
     {"no": 6, "value": 1.422},
     {"no": 7, "value": 1.413},
-    {"no": 8, "value": 1.424},
-    {"no": 9, "value": 1.421},
+    {"no": 8, "value": 1.426},
+    {"no": 9, "value": 1.419},
     {"no": 10, "value": 1.425},
     {"no": 11, "value": 1.423},
     {"no": 12, "value": 1.414},
@@ -41,9 +39,8 @@ GPT結果 (gpt-4.1-mini)
     {"no": 26, "value": 1.416}
   ]
 }
-```
 
-[2/10] 処理中: C:/Users/user/OneDrive/hhh\IMG_0041.jpeg
+処理中: hhh\IMG_0041.jpeg
 
 GPT結果 (gpt-4.1-mini)
 {
@@ -67,7 +64,7 @@ GPT結果 (gpt-4.1-mini)
   ]
 }
 
-[3/10] 処理中: C:/Users/user/OneDrive/hhh\IMG_0042.jpeg
+処理中: hhh\IMG_0042.jpeg
 
 GPT結果 (gpt-4.1-mini)
 {
@@ -75,8 +72,8 @@ GPT結果 (gpt-4.1-mini)
   "measurement_item": "均平度",
   "area": "3310㎡",
   "average": "1.467",
-  "xmax": "1.464",
-  "xmin": "1.474",
+  "xmax": "1.474",
+  "xmin": "1.464",
   "values": [
     {"no": 1, "value": 1.464},
     {"no": 2, "value": 1.464},
@@ -92,9 +89,10 @@ GPT結果 (gpt-4.1-mini)
   ]
 }
 
-[4/10] 処理中: C:/Users/user/OneDrive/hhh\IMG_0043.jpeg
+処理中: hhh\IMG_0043.jpeg
 
 GPT結果 (gpt-4.1-mini)
+```json
 {
   "taban": "8",
   "measurement_item": "均平度",
@@ -115,8 +113,9 @@ GPT結果 (gpt-4.1-mini)
     {"no": 10, "value": 1.407}
   ]
 }
+```
 
-[5/10] 処理中: C:/Users/user/OneDrive/hhh\IMG_0044.jpeg
+処理中: hhh\IMG_0044.jpeg
 
 GPT結果 (gpt-4.1-mini)
 {
@@ -140,7 +139,7 @@ GPT結果 (gpt-4.1-mini)
   ]
 }
 
-[6/10] 処理中: C:/Users/user/OneDrive/hhh\IMG_0045.jpeg
+処理中: hhh\IMG_0045.jpeg
 
 GPT結果 (gpt-4.1-mini)
 {
@@ -164,9 +163,10 @@ GPT結果 (gpt-4.1-mini)
   ]
 }
 
-[7/10] 処理中: C:/Users/user/OneDrive/hhh\IMG_0047.jpeg
+処理中: hhh\IMG_0047.jpeg
 
 GPT結果 (gpt-4.1-mini)
+```json
 {
   "taban": "5",
   "measurement_item": "均平度",
@@ -176,7 +176,7 @@ GPT結果 (gpt-4.1-mini)
   "xmin": "1.366",
   "values": [
     {"no": 1, "value": 1.380},
-    {"no": 2, "value": 1.386},
+    {"no": 2, "value": 1.380},
     {"no": 3, "value": 1.372},
     {"no": 4, "value": 1.386},
     {"no": 5, "value": 1.378},
@@ -186,8 +186,9 @@ GPT結果 (gpt-4.1-mini)
     {"no": 9, "value": 1.380}
   ]
 }
+```
 
-[8/10] 処理中: C:/Users/user/OneDrive/hhh\IMG_0048.jpeg
+処理中: hhh\IMG_0048.jpeg
 
 GPT結果 (gpt-4.1-mini)
 {
@@ -217,9 +218,10 @@ GPT結果 (gpt-4.1-mini)
   ]
 }
 
-[9/10] 処理中: C:/Users/user/OneDrive/hhh\IMG_0049.jpeg
+処理中: hhh\IMG_0049.jpeg
 
 GPT結果 (gpt-4.1-mini)
+```json
 {
   "taban": "2",
   "measurement_item": "均平度",
@@ -235,8 +237,9 @@ GPT結果 (gpt-4.1-mini)
     {"no": 5, "value": 1.409}
   ]
 }
+```
 
-[10/10] 処理中: C:/Users/user/OneDrive/hhh\IMG_0050.jpeg
+処理中: hhh\IMG_0050.jpeg
 
 GPT結果 (gpt-4.1-mini)
 {
@@ -244,8 +247,8 @@ GPT結果 (gpt-4.1-mini)
   "measurement_item": "均平度",
   "area": "3540㎡",
   "average": "1.428",
-  "xmax": "1.417",
-  "xmin": "1.434",
+  "xmax": "1.434",
+  "xmin": "1.417",
   "values": [
     {"no": 1, "value": 1.426},
     {"no": 2, "value": 1.430},
@@ -263,31 +266,31 @@ GPT結果 (gpt-4.1-mini)
 }
 
 未読なし: 田番11
-CSV保存完了: C:/Users/user/foolder/zzz\田番11.csv
+CSV保存完了: zzz\田番11.csv
 
 未読なし: 田番9
-CSV保存完了: C:/Users/user/foolder/zzz\田番9.csv
+CSV保存完了: zzz\田番9.csv
 
 未読なし: 田番10
-CSV保存完了: C:/Users/user/foolder/zzz\田番10.csv
+CSV保存完了: zzz\田番10.csv
 
 未読なし: 田番8
-CSV保存完了: C:/Users/user/foolder/zzz\田番8.csv
+CSV保存完了: zzz\田番8.csv
 
 未読なし: 田番7
-CSV保存完了: C:/Users/user/foolder/zzz\田番7.csv
+CSV保存完了: zzz\田番7.csv
 
 未読なし: 田番6
-CSV保存完了: C:/Users/user/foolder/zzz\田番6.csv
+CSV保存完了: zzz\田番6.csv
 
 未読なし: 田番5
-CSV保存完了: C:/Users/user/foolder/zzz\田番5.csv
+CSV保存完了: zzz\田番5.csv
 
 未読なし: 田番3
-CSV保存完了: C:/Users/user/foolder/zzz\田番3.csv
+CSV保存完了: zzz\田番3.csv
 
 未読なし: 田番2
-CSV保存完了: C:/Users/user/foolder/zzz\田番2.csv
+CSV保存完了: zzz\田番2.csv
 
 未読なし: 田番1
-CSV保存完了: C:/Users/user/foolder/zzz\田番1.csv
+CSV保存完了: zzz\田番1.csv
