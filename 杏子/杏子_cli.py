@@ -1,5 +1,6 @@
 from openai import OpenAI
 import base64
+from ocr_checker import check_ocr_result
 import os
 import csv
 import re
@@ -21,6 +22,7 @@ with open("master_taban.csv", encoding="utf-8-sig") as f:
 
 print("田番マスタ読込:", expected_counts)
 
+
 # =========================
 # 測定項目マスタ読込
 # =========================
@@ -34,6 +36,7 @@ with open("master_items.csv", encoding="utf-8-sig") as f:
         allowed_items.append(row["測定項目"].strip())
 
 print("測定項目マスタ読込:", ", ".join(allowed_items))
+
 
 # =========================
 # 工種マスタ読込
@@ -51,6 +54,7 @@ with open("master_work.csv", encoding="utf-8-sig") as f:
         work_master[item] = work
 
 print("工種マスタ読込:", work_master)
+
 
 # =========================
 # 規格値マスタ読込
@@ -71,6 +75,7 @@ with open("master_spec.csv", encoding="utf-8-sig") as f:
 
 print("規格値マスタ読込:", spec_master)
 
+
 # =========================
 # mm変換
 # =========================
@@ -80,6 +85,7 @@ def to_mm_text(value):
         return str(int(round(float(value) * 1000)))
     except:
         return ""
+
 
 # =========================
 # GPT OCR
@@ -188,6 +194,7 @@ def gpt_ocr(image_path, model_name, log):
         log(e)
         return {}
 
+
 # =========================
 # OCRメイン
 # =========================
@@ -209,21 +216,38 @@ def run_ocr(image_folder, output_folder):
         if f.lower().endswith((".png", ".jpg", ".jpeg"))
     ])
 
-    total_images = len(image_files)
-
-    if total_images == 0:
+    if len(image_files) == 0:
         log("画像がありません")
         return
 
     log("SSK写真 OCR → デキスパートCSV 自動作成開始")
 
-    for index, image_name in enumerate(image_files, start=1):
+    for image_name in image_files:
 
         image_path = os.path.join(image_folder, image_name)
 
         log(f"\n処理中: {image_path}")
 
-        result = gpt_ocr(image_path, "gpt-4.1-mini", log)
+        result = gpt_ocr(
+            image_path,
+            "gpt-4.1-mini",
+            log
+        )
+
+        # =========================
+        # OCR信頼度チェック
+        # =========================
+
+        check = check_ocr_result(
+            result,
+            taban_master=expected_counts
+        )
+
+        log(f"OCR信頼度: {check['score']}")
+        log(f"OCR判定: {check['level']}")
+
+        for warning in check["warnings"]:
+            log(f"注意: {warning}")
 
         taban = str(result.get("taban", "")).strip()
 
@@ -448,6 +472,7 @@ def run_ocr(image_folder, output_folder):
     log(f"測定情報CSV保存完了: {meta_csv}")
     log(f"ログ保存完了: {log_path}")
 
+
 # =========================
 # 実行
 # =========================
@@ -456,9 +481,12 @@ image_folder = r"C:\Users\user\foolder\634\photo_sorted\出来形測定写真"
 
 output_folder = r"C:\Users\user\foolder\zzz"
 
-
 run_ocr(
     image_folder,
     output_folder
 )
+
+
+
+
 
