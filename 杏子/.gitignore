@@ -14,8 +14,14 @@ work/
 *.csv
 __pycache__/
 *.pyc
-
-
+build/
+dist/
+*.exe
+*.spec
+*_files/
+*.toc
+*.pkg
+*.pyz
 
 
 
