@@ -23,6 +23,33 @@ dist/
 *.pkg
 *.pyz
 
+.env
+__pycache__/
+*.pyc
+
+*_files/
+build/
+dist/
+*.exe
+*.spec
+
+*.jpg
+*.jpeg
+*.png
+*.heic
+
+*.csv
+*.txt
+*.xlsx
+*.pdf
+
+images_all/
+photo_sorted/
+selected_photos/
+csv_output/
+reports/
+work/
+
 
 
 
