@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
 from openai import OpenAI
+from dotenv import load_dotenv
+
 import base64
 import os
 import csv
@@ -8,7 +10,15 @@ import re
 import json
 import threading
 
-client = OpenAI()
+# =========================
+# .env読込
+# =========================
+
+load_dotenv(dotenv_path=".env")
+
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
 # =========================
 # マスタ読込
@@ -181,11 +191,9 @@ def run_ocr(image_folder, output_folder, log):
 
     csv_by_taban = {}
     meta_by_taban = {}
-    log_lines = []
 
     def add_log(message):
         log(message)
-        log_lines.append(str(message))
 
     image_files = sorted([
         f for f in os.listdir(image_folder)
@@ -211,6 +219,12 @@ def run_ocr(image_folder, output_folder, log):
 
         taban = str(result.get("taban", "")).strip()
 
+        # 存在しない田番はスキップ
+
+        if taban not in expected_counts:
+            add_log(f"存在しない田番のためスキップ: {taban} / {image_name}")
+            continue
+
         measurement_item = str(
             result.get("measurement_item", "不明")
         ).strip()
@@ -223,36 +237,14 @@ def run_ocr(image_folder, output_folder, log):
             "整地工"
         )
 
-        spec_value = spec_master.get(
-            measurement_item,
-            {}
-        ).get("spec", "")
-
-        target_value = spec_master.get(
-            measurement_item,
-            {}
-        ).get("target", "")
-
-        design_value_raw = str(
+        design_value = to_mm_text(
             result.get("average", "")
-        ).strip()
-
-        design_value = to_mm_text(design_value_raw)
-
-        if taban not in expected_counts:
-            taban = "未分類"
+        )
 
         if taban not in meta_by_taban:
             meta_by_taban[taban] = {
                 "工種": work_type,
-                "測定項目": measurement_item,
-                "面積": result.get("area", ""),
-                "測定基準": "10a当たり3点以上",
-                "規格値": spec_value,
-                "社内目標値": target_value,
-                "設計値": design_value,
-                "Xmax": result.get("xmax", ""),
-                "Xmin": result.get("xmin", ""),
+                "測定項目": measurement_item
             }
 
         values = result.get("values", [])
@@ -260,46 +252,17 @@ def run_ocr(image_folder, output_folder, log):
         value_dict = {}
 
         for item in values:
+
             try:
                 no = int(item["no"])
                 value = float(item["value"])
 
                 value_dict[no] = value
+
             except:
                 pass
 
         total_count = expected_counts.get(taban, 0)
-
-        missing_no = []
-
-        for no in range(1, total_count + 1):
-            if no not in value_dict:
-                missing_no.append(no)
-
-        if missing_no:
-
-            add_log("\n未読No検出")
-            add_log(missing_no)
-
-            add_log("\n4.1で再OCR実施")
-
-            retry_result = gpt_ocr(
-                image_path,
-                "gpt-4.1",
-                add_log
-            )
-
-            for item in retry_result.get("values", []):
-
-                try:
-                    no = int(item["no"])
-                    value = float(item["value"])
-
-                    if no not in value_dict:
-                        value_dict[no] = value
-
-                except:
-                    pass
 
         if taban not in csv_by_taban:
             csv_by_taban[taban] = []
@@ -321,7 +284,9 @@ def run_ocr(image_folder, output_folder, log):
                 value_text
             ])
 
+    # =========================
     # CSV保存
+    # =========================
 
     for taban, rows in csv_by_taban.items():
 
@@ -351,68 +316,7 @@ def run_ocr(image_folder, output_folder, log):
 
         add_log(f"CSV保存完了: {output_csv}")
 
-    # 測定情報CSV
-
-    meta_csv = os.path.join(
-        output_folder,
-        "測定情報.csv"
-    )
-
-    with open(
-        meta_csv,
-        "w",
-        newline="",
-        encoding="utf-8-sig"
-    ) as f:
-
-        writer = csv.writer(f)
-
-        writer.writerow([
-            "田番",
-            "工種",
-            "測定項目",
-            "面積",
-            "測定基準",
-            "規格値",
-            "社内目標値",
-            "設計値",
-            "Xmax",
-            "Xmin"
-        ])
-
-        for taban, meta in meta_by_taban.items():
-
-            writer.writerow([
-                taban,
-                meta.get("工種", ""),
-                meta.get("測定項目", ""),
-                meta.get("面積", ""),
-                meta.get("測定基準", ""),
-                meta.get("規格値", ""),
-                meta.get("社内目標値", ""),
-                meta.get("設計値", ""),
-                meta.get("Xmax", ""),
-                meta.get("Xmin", "")
-            ])
-
-    # ログ保存
-
-    log_path = os.path.join(
-        output_folder,
-        "ssk_ocr_log.txt"
-    )
-
-    with open(
-        log_path,
-        "w",
-        encoding="utf-8"
-    ) as f:
-
-        f.write("\n".join(log_lines))
-
     add_log("\n全部完了")
-    add_log(f"測定情報CSV保存完了: {meta_csv}")
-    add_log(f"ログ保存完了: {log_path}")
 
     messagebox.showinfo(
         "完了",
@@ -430,30 +334,24 @@ root.geometry("900x700")
 image_folder_var = tk.StringVar()
 output_folder_var = tk.StringVar()
 
-# -------------------------
-
 def select_image_folder():
+
     folder = filedialog.askdirectory()
 
     if folder:
         image_folder_var.set(folder)
 
-# -------------------------
-
 def select_output_folder():
+
     folder = filedialog.askdirectory()
 
     if folder:
         output_folder_var.set(folder)
 
-# -------------------------
-
 def write_log(message):
 
     log_text.insert(tk.END, str(message) + "\n")
     log_text.see(tk.END)
-
-# -------------------------
 
 def start_ocr():
 
@@ -502,8 +400,6 @@ tk.Button(
     command=select_image_folder
 ).pack(pady=5)
 
-# -------------------------
-
 tk.Label(
     root,
     text="出力フォルダ"
@@ -521,8 +417,6 @@ tk.Button(
     command=select_output_folder
 ).pack(pady=5)
 
-# -------------------------
-
 tk.Button(
     root,
     text="OCR実行",
@@ -533,8 +427,6 @@ tk.Button(
     width=20
 ).pack(pady=10)
 
-# -------------------------
-
 log_text = scrolledtext.ScrolledText(
     root,
     width=120,
@@ -543,10 +435,4 @@ log_text = scrolledtext.ScrolledText(
 
 log_text.pack(padx=10, pady=10)
 
-# =========================
-# 起動
-# =========================
-
 root.mainloop()
-
-
