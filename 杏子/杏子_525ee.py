@@ -74,6 +74,8 @@ else:
 
 # =========================================
 # master_tree.csv 読込
+# 対応列:
+# 写真区分,工種,種別,細別,写真タイトル
 # =========================================
 
 master_list = []
@@ -88,6 +90,15 @@ if os.path.exists(MASTER_CSV):
     print("master_tree.csv 読込:", len(master_list))
 else:
     print("master_tree.csv がありません")
+
+# =========================================
+# 安全文字化
+# =========================================
+
+def safe_text(v):
+    if v is None:
+        return ""
+    return str(v)
 
 # =========================================
 # 重複判定
@@ -114,10 +125,7 @@ def is_duplicate(image_path):
 # =========================================
 
 def normalize_text(text):
-    if text is None:
-        return ""
-
-    text = str(text)
+    text = safe_text(text)
 
     replace_map = {
         " ": "",
@@ -131,10 +139,13 @@ def normalize_text(text):
         "平均平度": "均平度",
         "平均地上げ": "均平度",
         "平坦度": "均平度",
+        "基盤整地": "整地仕上げ",
         "整地整備": "整地",
         "整地場整備": "整地",
         "整地ほ場整備": "整地",
         "整地仕上": "整地仕上げ",
+        "農地中間管理機構関連": "",
+        "農地中間管理機関連": "",
     }
 
     for old, new in replace_map.items():
@@ -144,18 +155,21 @@ def normalize_text(text):
 
 # =========================================
 # 撮影箇所補正
+# 田番を最優先
 # =========================================
 
 def fix_location(location, blackboard_text):
-    text = f"{location}\n{blackboard_text}"
-
-    if location and location not in ["不明", ""]:
-        return location
+    text = (
+        safe_text(location)
+        + "\n"
+        + safe_text(blackboard_text)
+    )
 
     patterns = [
+        r"測点\s*田番\s*([0-9０-９]+)",
+        r"位置\s*田番\s*([0-9０-９]+)",
         r"田番\s*([0-9０-９]+)",
-        r"工事番号\s*([0-9０-９]+)",
-        r"\b([0-9]{1,2})\s*\(A=",
+        r"\b([0-9]{1,2})\s*\(A\s*=",
     ]
 
     for p in patterns:
@@ -163,12 +177,20 @@ def fix_location(location, blackboard_text):
 
         if m:
             num = m.group(1)
+
             num = num.translate(
-                str.maketrans("０１２３４５６７８９", "0123456789")
+                str.maketrans(
+                    "０１２３４５６７８９",
+                    "0123456789"
+                )
             )
+
             return f"田番{num}"
 
-    return location
+    if location and location not in ["不明", ""]:
+        return location
+
+    return ""
 
 # =========================================
 # 室内・事務所判定
@@ -176,15 +198,15 @@ def fix_location(location, blackboard_text):
 
 def is_indoor_office(result):
     scene = (
-        result.get("reason", "")
-        + result.get("blackboard_text", "")
-        + result.get("location", "")
-        + result.get("photo_type", "")
-        + result.get("work", "")
-        + result.get("type_name", "")
-        + result.get("detail_name", "")
-        + result.get("title", "")
-        + result.get("scene_description", "")
+        safe_text(result.get("reason"))
+        + safe_text(result.get("blackboard_text"))
+        + safe_text(result.get("location"))
+        + safe_text(result.get("photo_type"))
+        + safe_text(result.get("work"))
+        + safe_text(result.get("type_name"))
+        + safe_text(result.get("detail_name"))
+        + safe_text(result.get("title"))
+        + safe_text(result.get("scene_description"))
     )
 
     indoor_keywords = [
@@ -202,7 +224,7 @@ def is_indoor_office(result):
         "棚",
         "ホワイトボード",
         "蛍光灯",
-        "天井扇",
+        "天井",
         "事務用品",
         "打合せ",
         "事務室",
@@ -233,9 +255,11 @@ def analyze_image(image_path):
 
 最重要:
 黒板文字を優先して読んでください。
-ただし、黒板が写っていても写真全体が
-室内・事務所・机・パソコン・会議室・打合せ風景の場合は、
-現場施工写真として不適切な可能性があります。
+ただし、写真全体も見てください。
+
+黒板が写っていても、
+室内・机・書類・会議室・事務所中心写真は、
+現場施工写真として不適切な場合があります。
 
 JSONのみ返してください。
 
@@ -255,7 +279,7 @@ JSONのみ返してください。
   "confidence": 90
 }
 
-photo_type は以下から選んでください:
+photo_type は以下から選択:
 - 着手前及び完成写真
 - 施工状況写真
 - 安全管理写真
@@ -267,33 +291,32 @@ photo_type は以下から選んでください:
 - その他
 
 採用:
-- 工事内容が分かる
 - 黒板が読める
-- 出来形管理や施工状況として使える
-- 田番、測点、測定内容、作業内容が分かる
-- 屋外現場、施工箇所、測定箇所が写っている
+- 工事内容が分かる
+- 現場施工箇所が写る
+- 作業内容が分かる
+- 田番、測点、位置、作業名が分かる
 
 除外または要確認:
 - 室内
-- 事務所
+- 書類写真
+- 打合せ
 - 会議室
-- 机やパソコン中心
-- 書類や室内風景中心
-- 黒板はあるが現場施工箇所が写っていない
-- 日常写真
-- スナップ
 - 別工事
-- 別現場
+- スナップ
 - 黒板読めない
 - ブレ
 - ピンぼけ
 
-注意:
-室内事務所写真なら indoor_office を true にしてください。
-黒板に「整地仕上げ」「均平度」がある場合は、
-work は整地工、
-type_name は整地仕上げ、
-detail_name は均平度寄りにしてください。
+分類の注意:
+黒板に「整地仕上げ」「均平度」「基盤整地」がある場合は、
+work は 整地工
+type_name は 整地仕上げ
+detail_name は 均平度
+寄りにしてください。
+
+道路、市道取付、防護柵、敷砂利、表面排水などがある場合も、
+黒板文字を優先して分類してください。
 """
                         },
                         {
@@ -311,11 +334,9 @@ detail_name は均平度寄りにしてください。
             }
         )
 
-        result = json.loads(
+        return json.loads(
             response.choices[0].message.content
         )
-
-        return result
 
     except Exception as e:
         print("AIエラー:", e)
@@ -337,31 +358,48 @@ detail_name は均平度寄りにしてください。
         }
 
 # =========================================
-# master照合
+# master_tree.csv 照合
+# 写真区分・工種・種別・細別・写真タイトル対応
 # =========================================
 
-def match_master(work, type_name, detail_name, blackboard_text):
+def match_master(
+    photo_type,
+    work,
+    type_name,
+    detail_name,
+    title,
+    blackboard_text
+):
     best = None
     best_score = 0
 
+    src_photo_type = normalize_text(photo_type)
     src_work = normalize_text(work)
     src_type = normalize_text(type_name)
     src_detail = normalize_text(detail_name)
+    src_title = normalize_text(title)
     src_blackboard = normalize_text(blackboard_text)
 
     source_all = (
-        src_work
+        src_photo_type
+        + src_work
         + src_type
         + src_detail
+        + src_title
         + src_blackboard
     )
 
     for row in master_list:
         score = 0
 
+        m_photo_type = normalize_text(row.get("写真区分", ""))
         m_work = normalize_text(row.get("工種", ""))
         m_type = normalize_text(row.get("種別", ""))
         m_detail = normalize_text(row.get("細別", ""))
+        m_title = normalize_text(row.get("写真タイトル", ""))
+
+        if m_photo_type and m_photo_type in source_all:
+            score += 20
 
         if m_work and m_work in source_all:
             score += 30
@@ -370,7 +408,10 @@ def match_master(work, type_name, detail_name, blackboard_text):
             score += 35
 
         if m_detail and m_detail in source_all:
-            score += 35
+            score += 40
+
+        if m_title and m_title in source_all:
+            score += 30
 
         if src_work and m_work and (src_work in m_work or m_work in src_work):
             score += 15
@@ -379,6 +420,9 @@ def match_master(work, type_name, detail_name, blackboard_text):
             score += 20
 
         if src_detail and m_detail and (src_detail in m_detail or m_detail in src_detail):
+            score += 20
+
+        if src_title and m_title and (src_title in m_title or m_title in src_title):
             score += 20
 
         if score > best_score:
@@ -406,6 +450,7 @@ SubElement(base_info, "適用要領基準").text = "土木202303-01"
 
 # =========================================
 # 画像一覧
+# サブフォルダ込み
 # =========================================
 
 image_files = []
@@ -418,7 +463,9 @@ for ext in [
     "*.JPEG",
     "*.PNG"
 ]:
-    image_files.extend(Path(INPUT_FOLDER).glob(ext))
+    image_files.extend(
+        Path(INPUT_FOLDER).rglob(ext)
+    )
 
 image_files = sorted(image_files)
 
@@ -439,7 +486,7 @@ for img_path in image_files:
     print(img_path.name)
 
     # =====================================
-    # 重複チェック
+    # 重複
     # =====================================
 
     if is_duplicate(str(img_path)):
@@ -462,21 +509,18 @@ for img_path in image_files:
     unrelated = result.get("unrelated", False)
     indoor_office = result.get("indoor_office", False)
 
-    reason = result.get("reason", "")
-    scene_description = result.get("scene_description", "")
-    blackboard_text = result.get("blackboard_text", "")
-    location = result.get("location", "")
-    photo_type = result.get("photo_type", "その他")
-    work = result.get("work", "")
-    type_name = result.get("type_name", "")
-    detail_name = result.get("detail_name", "")
-    title = result.get("title", "写真")
+    reason = safe_text(result.get("reason"))
+    scene_description = safe_text(result.get("scene_description"))
+    blackboard_text = safe_text(result.get("blackboard_text"))
+    location = safe_text(result.get("location"))
+    photo_type = safe_text(result.get("photo_type"))
+    work = safe_text(result.get("work"))
+    type_name = safe_text(result.get("type_name"))
+    detail_name = safe_text(result.get("detail_name"))
+    title = safe_text(result.get("title"))
     confidence = result.get("confidence", 0)
 
-    location = fix_location(
-        location,
-        blackboard_text
-    )
+    location = fix_location(location, blackboard_text)
 
     print("採用:", usable)
     print("理由:", reason)
@@ -484,14 +528,16 @@ for img_path in image_files:
     print("黒板:")
     print(blackboard_text)
     print("撮影箇所:", location)
+    print("写真区分:", photo_type)
     print("工種:", work)
     print("種別:", type_name)
     print("細別:", detail_name)
+    print("写真タイトル:", title)
     print("室内事務所:", indoor_office)
     print("信頼度:", confidence)
 
     # =====================================
-    # 室内・事務所写真は要確認
+    # 室内・事務所
     # =====================================
 
     if indoor_office or is_indoor_office(result):
@@ -509,25 +555,31 @@ for img_path in image_files:
     # =====================================
 
     matched, score = match_master(
+        photo_type,
         work,
         type_name,
         detail_name,
+        title,
         blackboard_text
     )
 
     print("master一致:", score)
 
     if matched:
-        work = matched.get("工種", work)
-        type_name = matched.get("種別", type_name)
-        detail_name = matched.get("細別", detail_name)
+        photo_type = matched.get("写真区分", photo_type) or photo_type
+        work = matched.get("工種", work) or work
+        type_name = matched.get("種別", type_name) or type_name
+        detail_name = matched.get("細別", detail_name) or detail_name
+        title = matched.get("写真タイトル", title) or title
 
+        print("master採用 写真区分:", photo_type)
         print("master採用 工種:", work)
         print("master採用 種別:", type_name)
         print("master採用 細別:", detail_name)
+        print("master採用 写真タイトル:", title)
 
     # =====================================
-    # 別現場・無関係除外
+    # 別現場・無関係
     # =====================================
 
     if unrelated:
@@ -541,7 +593,7 @@ for img_path in image_files:
         continue
 
     # =====================================
-    # AI的に価値低
+    # AI価値低
     # =====================================
 
     if not usable:
@@ -615,12 +667,7 @@ for img_path in image_files:
 # XML保存
 # =========================================
 
-# =========================================
-# XML保存
-# =========================================
-
 if serial_no == 1:
-
     print()
     print("================================")
     print("採用写真なし")
@@ -628,7 +675,6 @@ if serial_no == 1:
     print("================================")
 
 else:
-
     xml_body = tostring(
         root,
         encoding="shift_jis",
@@ -636,15 +682,8 @@ else:
     )
 
     with open(PHOTO_XML_PATH, "wb") as f:
-
-        f.write(
-            b'<?xml version="1.0" encoding="Shift_JIS"?>\r\n'
-        )
-
-        f.write(
-            b'<!DOCTYPE photodata SYSTEM "PHOTO05.DTD">\r\n'
-        )
-
+        f.write(b'<?xml version="1.0" encoding="Shift_JIS"?>\r\n')
+        f.write(b'<!DOCTYPE photodata SYSTEM "PHOTO05.DTD">\r\n')
         f.write(xml_body)
 
     print()
@@ -652,5 +691,3 @@ else:
     print("PHOTO.XML 完成")
     print(PHOTO_XML_PATH)
     print("================================")
-
-    
