@@ -1,55 +1,19 @@
 .env
-images_all/
-photo_sorted/
-selected_photos/
-csv_output/
-reports/
-work/
-*.jpg
-*.jpeg
-*.png
-*.heic
-*.pdf
-*.xlsx
-*.csv
-__pycache__/
-*.pyc
-build/
-dist/
-*.exe
-*.spec
-*_files/
-*.toc
-*.pkg
-*.pyz
-
-.env
 __pycache__/
 *.pyc
 
-*_files/
 build/
 dist/
-*.exe
-*.spec
 
-*.jpg
-*.jpeg
-*.png
-*.heic
-
-*.csv
-*.txt
-*.xlsx
-*.pdf
-
-images_all/
 photo_sorted/
 selected_photos/
-csv_output/
 reports/
+csv_output/
 work/
+zzz/
 
+*.exe
 
-
+*_files/
+hhh/
 

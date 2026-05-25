@@ -1,6 +1,13 @@
+.env
 __pycache__/
-*.png
-*.jpg
+*.pyc
+
+selected_photos/
+csv_output/
+reports/
+work/
+
 *.xlsx
-test.bmp/
-test2_files/
+*.jpg
+*.jpeg
+*.png
