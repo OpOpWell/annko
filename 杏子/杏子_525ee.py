@@ -13,15 +13,9 @@ from dotenv import load_dotenv
 from PIL import Image
 import imagehash
 
-# =========================================
-# API KEY
-# =========================================
-
 load_dotenv()
 
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY")
-)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # =========================================
 # パス設定
@@ -30,28 +24,17 @@ client = OpenAI(
 BASE_FOLDER = r"C:\Users\user\foolder\杏子"
 INPUT_FOLDER = r"C:/Users/user/OneDrive/hhh"
 
-MASTER_CSV = os.path.join(BASE_FOLDER, "master_tree.csv")
+MASTER_PROJECT = os.path.join(BASE_FOLDER, "master_project.csv")
+MASTER_COMMON = os.path.join(BASE_FOLDER, "master_common.csv")
 
-PHOTO_XML_ROOT = os.path.join(
-    BASE_FOLDER,
-    "selected_photos",
-    "PHOTO_XML"
-)
-
-PHOTO_XML_PATH = os.path.join(
-    PHOTO_XML_ROOT,
-    "PHOTO.XML"
-)
+PHOTO_XML_ROOT = os.path.join(BASE_FOLDER, "selected_photos", "PHOTO_XML")
+PHOTO_XML_PATH = os.path.join(PHOTO_XML_ROOT, "PHOTO.XML")
 
 PIC_FOLDER = os.path.join(PHOTO_XML_ROOT, "PIC")
 EXCLUDE_FOLDER = os.path.join(PHOTO_XML_ROOT, "EXCLUDE")
 CHECK_FOLDER = os.path.join(PHOTO_XML_ROOT, "CHECK")
 
 SOURCE_DTD = os.path.join(BASE_FOLDER, "PHOTO05.DTD")
-
-# =========================================
-# フォルダ作成
-# =========================================
 
 os.makedirs(PHOTO_XML_ROOT, exist_ok=True)
 os.makedirs(PIC_FOLDER, exist_ok=True)
@@ -63,66 +46,42 @@ os.makedirs(CHECK_FOLDER, exist_ok=True)
 # =========================================
 
 if os.path.exists(SOURCE_DTD):
-    shutil.copy2(
-        SOURCE_DTD,
-        os.path.join(PHOTO_XML_ROOT, "PHOTO05.DTD")
-    )
+    shutil.copy2(SOURCE_DTD, os.path.join(PHOTO_XML_ROOT, "PHOTO05.DTD"))
     print("PHOTO05.DTD コピーOK")
 else:
     print("PHOTO05.DTD がありません")
     print(SOURCE_DTD)
 
 # =========================================
-# master_tree.csv 読込
-# 対応列:
-# 写真区分,工種,種別,細別,写真タイトル
+# master 読込
 # =========================================
 
-master_list = []
+def load_master(csv_path):
+    rows = []
 
-if os.path.exists(MASTER_CSV):
-    with open(MASTER_CSV, "r", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
+    if os.path.exists(csv_path):
+        with open(csv_path, "r", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                rows.append(row)
 
-        for row in reader:
-            master_list.append(row)
+        print(os.path.basename(csv_path), "読込:", len(rows))
+    else:
+        print(os.path.basename(csv_path), "なし")
 
-    print("master_tree.csv 読込:", len(master_list))
-else:
-    print("master_tree.csv がありません")
+    return rows
+
+project_master = load_master(MASTER_PROJECT)
+common_master = load_master(MASTER_COMMON)
 
 # =========================================
-# 安全文字化
+# 共通関数
 # =========================================
 
 def safe_text(v):
     if v is None:
         return ""
     return str(v)
-
-# =========================================
-# 重複判定
-# =========================================
-
-hash_db = {}
-
-def is_duplicate(image_path):
-    try:
-        img = Image.open(image_path)
-        h = str(imagehash.phash(img))
-
-        if h in hash_db:
-            return True
-
-        hash_db[h] = image_path
-        return False
-
-    except Exception:
-        return False
-
-# =========================================
-# テキスト正規化
-# =========================================
 
 def normalize_text(text):
     text = safe_text(text)
@@ -154,16 +113,31 @@ def normalize_text(text):
     return text
 
 # =========================================
+# 重複判定
+# =========================================
+
+hash_db = {}
+
+def is_duplicate(image_path):
+    try:
+        img = Image.open(image_path)
+        h = str(imagehash.phash(img))
+
+        if h in hash_db:
+            return True
+
+        hash_db[h] = image_path
+        return False
+
+    except Exception:
+        return False
+
+# =========================================
 # 撮影箇所補正
-# 田番を最優先
 # =========================================
 
 def fix_location(location, blackboard_text):
-    text = (
-        safe_text(location)
-        + "\n"
-        + safe_text(blackboard_text)
-    )
+    text = safe_text(location) + "\n" + safe_text(blackboard_text)
 
     patterns = [
         r"測点\s*田番\s*([0-9０-９]+)",
@@ -177,14 +151,9 @@ def fix_location(location, blackboard_text):
 
         if m:
             num = m.group(1)
-
             num = num.translate(
-                str.maketrans(
-                    "０１２３４５６７８９",
-                    "0123456789"
-                )
+                str.maketrans("０１２３４５６７８９", "0123456789")
             )
-
             return f"田番{num}"
 
     if location and location not in ["不明", ""]:
@@ -243,7 +212,6 @@ def analyze_image(image_path):
 
         response = client.chat.completions.create(
             model="gpt-4.1-mini",
-
             messages=[
                 {
                     "role": "user",
@@ -253,9 +221,8 @@ def analyze_image(image_path):
                             "text": """
 工事写真を解析してください。
 
-最重要:
 黒板文字を優先して読んでください。
-ただし、写真全体も見てください。
+ただし写真全体も見てください。
 
 黒板が写っていても、
 室内・机・書類・会議室・事務所中心写真は、
@@ -314,9 +281,6 @@ work は 整地工
 type_name は 整地仕上げ
 detail_name は 均平度
 寄りにしてください。
-
-道路、市道取付、防護柵、敷砂利、表面排水などがある場合も、
-黒板文字を優先して分類してください。
 """
                         },
                         {
@@ -328,15 +292,10 @@ detail_name は 均平度
                     ]
                 }
             ],
-
-            response_format={
-                "type": "json_object"
-            }
+            response_format={"type": "json_object"}
         )
 
-        return json.loads(
-            response.choices[0].message.content
-        )
+        return json.loads(response.choices[0].message.content)
 
     except Exception as e:
         print("AIエラー:", e)
@@ -358,78 +317,92 @@ detail_name は 均平度
         }
 
 # =========================================
-# master_tree.csv 照合
-# 写真区分・工種・種別・細別・写真タイトル対応
+# master スコア
 # =========================================
 
-def match_master(
-    photo_type,
-    work,
-    type_name,
-    detail_name,
-    title,
-    blackboard_text
-):
-    best = None
-    best_score = 0
+def score_master_row(row, source_all, strong=True):
+    score = 0
 
-    src_photo_type = normalize_text(photo_type)
-    src_work = normalize_text(work)
-    src_type = normalize_text(type_name)
-    src_detail = normalize_text(detail_name)
-    src_title = normalize_text(title)
-    src_blackboard = normalize_text(blackboard_text)
+    m_photo_type = normalize_text(row.get("写真区分", ""))
+    m_work = normalize_text(row.get("工種", ""))
+    m_type = normalize_text(row.get("種別", ""))
+    m_detail = normalize_text(row.get("細別", ""))
+    m_title = normalize_text(row.get("写真タイトル", ""))
 
-    source_all = (
-        src_photo_type
-        + src_work
-        + src_type
-        + src_detail
-        + src_title
-        + src_blackboard
-    )
-
-    for row in master_list:
-        score = 0
-
-        m_photo_type = normalize_text(row.get("写真区分", ""))
-        m_work = normalize_text(row.get("工種", ""))
-        m_type = normalize_text(row.get("種別", ""))
-        m_detail = normalize_text(row.get("細別", ""))
-        m_title = normalize_text(row.get("写真タイトル", ""))
-
+    if strong:
         if m_photo_type and m_photo_type in source_all:
             score += 20
 
         if m_work and m_work in source_all:
-            score += 30
-
-        if m_type and m_type in source_all:
             score += 35
 
-        if m_detail and m_detail in source_all:
+        if m_type and m_type in source_all:
             score += 40
 
+        if m_detail and m_detail in source_all:
+            score += 45
+
         if m_title and m_title in source_all:
-            score += 30
+            score += 35
 
-        if src_work and m_work and (src_work in m_work or m_work in src_work):
-            score += 15
+    else:
+        # common は弱くする
+        if m_photo_type and m_photo_type in source_all:
+            score += 3
 
-        if src_type and m_type and (src_type in m_type or m_type in src_type):
-            score += 20
+        if m_work and m_work in source_all:
+            score += 6
 
-        if src_detail and m_detail and (src_detail in m_detail or m_detail in src_detail):
-            score += 20
+        if m_type and m_type in source_all:
+            score += 8
 
-        if src_title and m_title and (src_title in m_title or m_title in src_title):
-            score += 20
+        if m_detail and m_detail in source_all:
+            score += 10
+
+        if m_title and m_title in source_all:
+            score += 8
+
+    return score
+
+# =========================================
+# master 照合
+# project 優先 → common 補助
+# =========================================
+
+def match_master(photo_type, work, type_name, detail_name, title, blackboard_text):
+    best = None
+    best_score = 0
+    best_source = ""
+
+    source_all = (
+        normalize_text(photo_type)
+        + normalize_text(work)
+        + normalize_text(type_name)
+        + normalize_text(detail_name)
+        + normalize_text(title)
+        + normalize_text(blackboard_text)
+    )
+
+    # まず現場専用 master_project を強く見る
+    for row in project_master:
+        score = score_master_row(row, source_all, strong=True)
 
         if score > best_score:
             best_score = score
             best = row
+            best_source = "project"
 
-    return best, best_score
+    # project が弱い時だけ common を補助で見る
+    if best_score < 60:
+        for row in common_master:
+            score = score_master_row(row, source_all, strong=False)
+
+            if score > best_score:
+                best_score = score
+                best = row
+                best_source = "common"
+
+    return best, best_score, best_source
 
 # =========================================
 # XML ROOT
@@ -438,34 +411,19 @@ def match_master(
 root = Element("photodata")
 root.set("DTD_version", "05")
 
-# =========================================
-# 基礎情報
-# =========================================
-
 base_info = SubElement(root, "基礎情報")
-
 SubElement(base_info, "写真フォルダ名").text = "PHOTO/PIC"
 SubElement(base_info, "参考図フォルダ名").text = "PHOTO/DRA"
 SubElement(base_info, "適用要領基準").text = "土木202303-01"
 
 # =========================================
 # 画像一覧
-# サブフォルダ込み
 # =========================================
 
 image_files = []
 
-for ext in [
-    "*.jpg",
-    "*.jpeg",
-    "*.png",
-    "*.JPG",
-    "*.JPEG",
-    "*.PNG"
-]:
-    image_files.extend(
-        Path(INPUT_FOLDER).rglob(ext)
-    )
+for ext in ["*.jpg", "*.jpeg", "*.png", "*.JPG", "*.JPEG", "*.PNG"]:
+    image_files.extend(Path(INPUT_FOLDER).rglob(ext))
 
 image_files = sorted(image_files)
 
@@ -474,34 +432,21 @@ print("工事写真解析開始")
 print("対象枚数:", len(image_files))
 print("================================")
 
+serial_no = 1
+
 # =========================================
 # 写真処理
 # =========================================
-
-serial_no = 1
 
 for img_path in image_files:
     print()
     print("================================")
     print(img_path.name)
 
-    # =====================================
-    # 重複
-    # =====================================
-
     if is_duplicate(str(img_path)):
         print("重複検出 → EXCLUDE")
-
-        shutil.copy2(
-            img_path,
-            os.path.join(EXCLUDE_FOLDER, img_path.name)
-        )
-
+        shutil.copy2(img_path, os.path.join(EXCLUDE_FOLDER, img_path.name))
         continue
-
-    # =====================================
-    # AI解析
-    # =====================================
 
     result = analyze_image(str(img_path))
 
@@ -536,25 +481,12 @@ for img_path in image_files:
     print("室内事務所:", indoor_office)
     print("信頼度:", confidence)
 
-    # =====================================
-    # 室内・事務所
-    # =====================================
-
     if indoor_office or is_indoor_office(result):
         print("室内・事務所写真 → CHECK")
-
-        shutil.copy2(
-            img_path,
-            os.path.join(CHECK_FOLDER, img_path.name)
-        )
-
+        shutil.copy2(img_path, os.path.join(CHECK_FOLDER, img_path.name))
         continue
 
-    # =====================================
-    # master照合
-    # =====================================
-
-    matched, score = match_master(
+    matched, score, source = match_master(
         photo_type,
         work,
         type_name,
@@ -564,6 +496,7 @@ for img_path in image_files:
     )
 
     print("master一致:", score)
+    print("master種別:", source)
 
     if matched:
         photo_type = matched.get("写真区分", photo_type) or photo_type
@@ -578,74 +511,43 @@ for img_path in image_files:
         print("master採用 細別:", detail_name)
         print("master採用 写真タイトル:", title)
 
-    # =====================================
-    # 別現場・無関係
-    # =====================================
-
     if unrelated:
         print("別現場または無関係 → EXCLUDE")
-
-        shutil.copy2(
-            img_path,
-            os.path.join(EXCLUDE_FOLDER, img_path.name)
-        )
-
+        shutil.copy2(img_path, os.path.join(EXCLUDE_FOLDER, img_path.name))
         continue
-
-    # =====================================
-    # AI価値低
-    # =====================================
 
     if not usable:
         print("採用価値低 → CHECK")
-
-        shutil.copy2(
-            img_path,
-            os.path.join(CHECK_FOLDER, img_path.name)
-        )
-
+        shutil.copy2(img_path, os.path.join(CHECK_FOLDER, img_path.name))
         continue
 
-    # =====================================
-    # master一致低
-    # =====================================
-
-    if master_list and score < 30:
-        print("master一致低 → CHECK")
-
-        shutil.copy2(
-            img_path,
-            os.path.join(CHECK_FOLDER, img_path.name)
-        )
-
-        continue
-
-    # =====================================
-    # 採用保存
-    # =====================================
+    # project が無い時は common だけで強制採用しない
+    if project_master:
+        if source != "project" or score < 60:
+            print("現場master一致低 → CHECK")
+            shutil.copy2(img_path, os.path.join(CHECK_FOLDER, img_path.name))
+            continue
+    else:
+        if score < 30:
+            print("master一致低 → CHECK")
+            shutil.copy2(img_path, os.path.join(CHECK_FOLDER, img_path.name))
+            continue
 
     new_name = f"P{serial_no:07}.JPG"
-
     dst_path = os.path.join(PIC_FOLDER, new_name)
 
     shutil.copy2(img_path, dst_path)
 
     print("採用保存:", new_name)
 
-    # =====================================
-    # XML
-    # =====================================
-
     photo_info = SubElement(root, "写真情報")
 
     file_info = SubElement(photo_info, "写真ファイル情報")
-
     SubElement(file_info, "シリアル番号").text = str(serial_no)
     SubElement(file_info, "写真ファイル名").text = new_name
     SubElement(file_info, "メディア番号").text = "1"
 
     category = SubElement(photo_info, "撮影工種区分")
-
     SubElement(category, "写真-大分類").text = "工事"
     SubElement(category, "写真区分").text = photo_type
     SubElement(category, "工種").text = work
@@ -654,7 +556,6 @@ for img_path in image_files:
     SubElement(category, "写真タイトル").text = title
 
     shoot = SubElement(photo_info, "撮影情報")
-
     SubElement(shoot, "撮影年月日").text = datetime.now().strftime("%Y-%m-%d")
     SubElement(shoot, "撮影箇所").text = location
 
@@ -673,7 +574,6 @@ if serial_no == 1:
     print("採用写真なし")
     print("PHOTO.XML 作成スキップ")
     print("================================")
-
 else:
     xml_body = tostring(
         root,
@@ -691,3 +591,13 @@ else:
     print("PHOTO.XML 完成")
     print(PHOTO_XML_PATH)
     print("================================")
+
+
+
+
+
+
+
+
+
+    
