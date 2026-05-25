@@ -107,6 +107,30 @@ def normalize_text(text):
     return text
 
 
+def has_measurement_values(text):
+    """
+    均平度などの測定値が黒板にあるか判定。
+    例: 1.275 / 1.260 / Xmax など。
+    """
+    t = safe_text(text)
+
+    if re.search(r"\d+\.\d+", t):
+        return True
+
+    keywords = [
+        "Xmax",
+        "Xmin",
+        "平均",
+        "測定値",
+        "測定値一覧",
+        "KBM",
+        "BS=",
+        "IH=",
+    ]
+
+    return any(k in t for k in keywords)
+
+
 def normalize_work_name(work):
     w = normalize_text(work)
 
@@ -132,11 +156,7 @@ def normalize_work_name(work):
 
 
 def normalize_type_name(type_name, detail_name="", blackboard_text=""):
-    text = (
-        normalize_text(type_name)
-        + normalize_text(detail_name)
-        + normalize_text(blackboard_text)
-    )
+    text = normalize_text(type_name) + normalize_text(detail_name) + normalize_text(blackboard_text)
 
     if "熱中症" in text:
         return "安全管理"
@@ -144,12 +164,14 @@ def normalize_type_name(type_name, detail_name="", blackboard_text=""):
     if "均平度" in text or "整地仕上げ" in text or "基盤整地" in text:
         return "整地仕上げ"
 
-    # 敷均し・転圧を掘削より優先
     if "敷均し" in text or "転圧" in text or "均し" in text:
         return "均し工"
 
     if "床掘" in text or "掘削" in text or "根切" in text:
         return "掘削"
+
+    if "据付" in text or "布設" in text:
+        return "据付工"
 
     return safe_text(type_name)
 
@@ -166,7 +188,6 @@ def normalize_detail_name(detail_name, blackboard_text=""):
     if "基盤整地" in text or "整地仕上げ" in text:
         return "基盤整地"
 
-    # 敷均し・転圧を掘削より優先
     if "敷均し" in text and "転圧" in text:
         return "敷均・転圧状況"
 
@@ -175,6 +196,9 @@ def normalize_detail_name(detail_name, blackboard_text=""):
 
     if "床掘" in text or "掘削" in text or "根切" in text:
         return "床掘・底付け状況"
+
+    if "据付" in text or "布設" in text:
+        return "据付状況"
 
     return safe_text(detail_name)
 
@@ -235,6 +259,7 @@ def type_conflict(ai_type, ai_detail, master_type, master_detail, blackboard_tex
         "均し工",
         "整地仕上げ",
         "安全管理",
+        "据付工",
     ]
 
     if ai_group in strong_types and ma_group in strong_types:
@@ -249,15 +274,20 @@ def apply_blackboard_priority(photo_type, work, type_name, detail_name, title, b
     if "熱中症" in text:
         photo_type = "安全管理写真"
         work = "安全管理"
+        type_name = "安全管理"
         detail_name = "熱中症対策"
-        if not title:
-            title = "熱中症対策"
+        title = "熱中症対策"
 
     elif "小用水路" in text or "用水路" in text or "水路" in text:
         work = "水路工"
 
-        # 敷均し・転圧を掘削より優先
-        if "敷均し" in text or "転圧" in text or "均し" in text:
+        if "据付" in text or "布設" in text:
+            photo_type = "施工状況写真"
+            type_name = "据付工"
+            detail_name = "据付状況"
+            title = "小用水路 据付状況"
+
+        elif "敷均し" in text or "転圧" in text or "均し" in text:
             photo_type = "施工状況写真"
             type_name = "均し工"
             detail_name = "敷均・転圧状況"
@@ -272,7 +302,6 @@ def apply_blackboard_priority(photo_type, work, type_name, detail_name, title, b
     elif "土工" in text:
         work = "土工"
 
-        # 敷均し・転圧を掘削より優先
         if "敷均し" in text or "転圧" in text or "均し" in text:
             photo_type = "施工状況写真"
             type_name = "均し工"
@@ -289,8 +318,10 @@ def apply_blackboard_priority(photo_type, work, type_name, detail_name, title, b
         work = "整地工"
         type_name = "整地仕上げ"
         detail_name = "均平度"
+
         if not photo_type:
             photo_type = "品質管理写真"
+
         if not title:
             title = "均平度"
 
@@ -299,6 +330,7 @@ def apply_blackboard_priority(photo_type, work, type_name, detail_name, title, b
         photo_type = "施工状況写真"
         type_name = "整地仕上げ"
         detail_name = "基盤整地"
+
         if not title:
             title = "基盤整地施工状況写真"
 
@@ -340,9 +372,7 @@ def fix_location(location, blackboard_text):
 
         if m:
             num = m.group(1)
-            num = num.translate(
-                str.maketrans("０１２３４５６７８９", "0123456789")
-            )
+            num = num.translate(str.maketrans("０１２３４５６７８９", "0123456789"))
             return f"田番{num}"
 
     if location and location not in ["不明", ""]:
@@ -352,9 +382,13 @@ def fix_location(location, blackboard_text):
 
 
 def is_indoor_office(result):
+    """
+    室内・事務所写真判定。
+    黒板に「工事事務所」と書いてあるだけでは室内扱いしない。
+    写真内容・理由側に室内描写がある場合だけ強く判定する。
+    """
     scene = (
         safe_text(result.get("reason"))
-        + safe_text(result.get("blackboard_text"))
         + safe_text(result.get("location"))
         + safe_text(result.get("photo_type"))
         + safe_text(result.get("work"))
@@ -364,10 +398,11 @@ def is_indoor_office(result):
         + safe_text(result.get("scene_description"))
     )
 
-    indoor_keywords = [
+    strong_indoor_keywords = [
         "室内",
-        "事務所",
         "会議室",
+        "事務所内",
+        "オフィス内",
         "机",
         "デスク",
         "椅子",
@@ -385,7 +420,7 @@ def is_indoor_office(result):
         "事務室",
     ]
 
-    return any(k in scene for k in indoor_keywords)
+    return any(k in scene for k in strong_indoor_keywords)
 
 
 def analyze_image(image_path):
@@ -447,20 +482,22 @@ photo_type は以下から選択:
 - ブレ
 - ピンぼけ
 
-分類の注意:
+注意:
+黒板に「工事事務所」と書いてあっても、
+写真全体が屋外の施工現場なら indoor_office は false にしてください。
 
 黒板に「熱中症対策」がある場合は、
 photo_type は 安全管理写真
 work は 安全管理
+type_name は 安全管理
 detail_name は 熱中症対策 にしてください。
-
-黒板に「整地仕上げ」「均平度」「基盤整地」がある場合は、
-work は 整地工
-type_name は 整地仕上げ
-detail_name は 均平度 または 基盤整地 にしてください。
 
 黒板に「小用水路」「用水路」「水路」がある場合は、
 work は 水路工 にしてください。
+
+小用水路や水路で「据付」「布設」がある場合は、
+type_name は 据付工
+detail_name は 据付状況 にしてください。
 
 小用水路や水路で「敷均し」「転圧」「均し」がある場合は、
 type_name は 均し工
@@ -470,6 +507,11 @@ detail_name は 敷均・転圧状況 にしてください。
 敷均し・転圧が無い場合は、
 type_name は 掘削
 detail_name は 床掘・底付け状況 にしてください。
+
+黒板に「整地仕上げ」「均平度」「基盤整地」がある場合は、
+work は 整地工
+type_name は 整地仕上げ
+detail_name は 均平度 または 基盤整地 にしてください。
 
 黒板に「土工」がある場合は、
 work は 土工 にしてください。
@@ -651,6 +693,21 @@ def apply_master_safely(
     matched_title = matched.get("写真タイトル", "") or title
 
     matched_detail = clean_master_detail(matched_detail)
+
+    # 安全管理は工種を「ほ場整備工事」などへ上書きしない
+    if work == "安全管理":
+        matched_work = work
+
+    # 黒板に均平度も測定値も無いのに、masterで均平度へ吸着するのを防ぐ
+    if matched_detail == "均平度":
+        blackboard_n = normalize_text(blackboard_text)
+
+        if "均平度" not in blackboard_n and not has_measurement_values(blackboard_text):
+            print("均平度根拠なし → 基盤整地へ補正")
+            matched_detail = "基盤整地"
+
+            if "均平度" in matched_title:
+                matched_title = "基盤整地施工状況写真"
 
     if work_conflict(work, matched_work):
         print("master工種衝突 → AI分類を優先")
@@ -883,21 +940,15 @@ else:
     print(PHOTO_XML_PATH)
     print("================================")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     
+
+
+
+
+
+
+
+
+
+
+
