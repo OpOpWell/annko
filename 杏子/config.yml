@@ -1,0 +1,9 @@
+# 工事写真整理システム 設定
+
+base_folder: "C:\\Users\\user\\foolder\\杏子"
+input_folder: "C:\\Users\\user\\OneDrive\\hhh"
+
+openai_model: "gpt-4.1-mini"
+
+max_workers: 5
+hash_threshold: 8
