@@ -11,3 +11,10 @@ work/
 *.jpg
 *.jpeg
 *.png
+
+backup/
+**/backup/
+archive/
+**/archive/
+zzz/
+**/zzz/
