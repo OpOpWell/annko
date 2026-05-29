@@ -7,3 +7,16 @@ build/
 *.pkg
 *.log
 selected_photos/
+
+backup/
+**/backup/
+archive/
+**/archive/
+zzz/
+**/zzz/
+
+
+
+
+
+
