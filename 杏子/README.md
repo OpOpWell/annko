@@ -1,3 +1,21 @@
+
+## スクリーンショット
+
+### 写真分類GUI
+
+![写真分類GUI](杏子/images_all/screenshots/gui_main.png)
+
+![写真分類実行](杏子/images_all/screenshots/写真分類1.png)
+
+![写真分類結果](杏子/images_all/screenshots/写真分類2.png)
+
+### OCR・CSV作成GUI
+
+![CSV作成メイン](杏子/images_all/screenshots/csv作成メイン.png)
+
+![CSV作成1](杏子/images_all/screenshots/csv作成1.png)
+
+![CSV作成2](杏子/images_all/screenshots/csv作成2.png)
 # 杏子 - 建設写真AI整理システム
 
 ## なぜ作ったか
