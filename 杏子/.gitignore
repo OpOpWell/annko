@@ -17,3 +17,8 @@ zzz/
 *_files/
 hhh/
 
+*.log
+__pycache__/
+.env
+selected_photos/
+backup_before整理/
